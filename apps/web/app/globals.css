@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   /* ClawPump Futuristic Dark Crypto Aesthetic (bold non-generic, sharp cyan+gold accents, generous negative space + controlled density, layered geometric textures, motion via framer + css, no Inter/Roboto/Arial/purple-white slop) */
