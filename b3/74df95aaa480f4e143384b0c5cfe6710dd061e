@@ -1,0 +1,62 @@
+apps/web/app/layout.tsx
+  s_1c001696901f9b::t_a4030e4e613944 3-5,9-10,22,24,26-28,31-33,38,41-42,44,50-53,56
+apps/web/components/wallet/WalletBar.tsx
+  s_1c001696901f9b::t_e801b4e17e2025 1-22
+apps/web/app/api/link-agent/route.ts
+  s_1c001696901f9b::t_e8f328866b612e 1-47
+apps/web/app/api/curve/route.ts
+  s_1c001696901f9b::t_0e3c0830c01404 1-40
+apps/web/app/api/tier/route.ts
+  s_1c001696901f9b::t_9314ddc461a009 1-4,7-17,21-27,29-32,34-35,37-50,52-53,55,57-58,65,68-72
+apps/web/app/api/launch/route.ts
+  s_1c001696901f9b::t_46d572886e67bc 1-48
+apps/web/lib/clawpump.ts
+  s_1c001696901f9b::t_795d7c6b88fa88 1-218
+apps/web/app/api/helius/route.ts
+  s_1c001696901f9b::t_74acbc9f04dfa0 1-2,5-6,8-12,14-17,20,23-29,31-36,38-43,46-47,50-54
+apps/web/app/page.tsx
+  s_1c001696901f9b::t_66e37ba56cd26a 3-4,6-72,83-95,97-101,103,107-118,120-132,134-180,182-201,204-228,231-253,255,257-279,281,283-290,295-323,328,330-373,378-384,386,388-398,403-434,437-439,441-499,502-504,506-644,646-655,657-670,672-696,698-761
+apps/web/public/skill.md
+  s_1c001696901f9b::t_95ebdade9b394e 1-81
+apps/web/tsconfig.json
+  s_1c001696901f9b::t_c9b63fcddf54ef 29
+apps/web/app/api/agent/[id]/route.ts
+  s_1c001696901f9b::t_21706881792702 1-24
+apps/web/package.json
+  s_1c001696901f9b::t_05de21cb908db5 16
+apps/web/app/api/tokens/route.ts
+  s_1c001696901f9b::t_9df0e85f6ff8fa 1-56
+apps/web/eslint.config.mjs
+  s_1c001696901f9b::t_6f97ec25bbcd3e 2-3
+apps/web/components/wallet/Provider.tsx
+  s_1c001696901f9b::t_c9ec4df8d46889 1-14,17,19,36-41,47-48
+  s_1c001696901f9b::t_4ae3ebc204e674 15-16,18,20-35,42-46
+apps/web/lib/dexscreener.ts
+  s_1c001696901f9b::t_0f31019d2f25a7 1-168
+apps/web/app/api/leaderboard/route.ts
+  s_1c001696901f9b::t_e451b5ae934470 1-16
+apps/web/lib/db.ts
+  s_1c001696901f9b::t_c385058b8a15b7 1-129
+apps/web/app/api/claw/route.ts
+  s_1c001696901f9b::t_2319fa5830369b 1-55
+apps/web/lib/curve.ts
+  s_1c001696901f9b::t_012baa13376900 1-105
+apps/web/app/api/stats/route.ts
+  s_1c001696901f9b::t_3cf566676ded80 1-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "b374df95aaa480f4e143384b0c5cfe6710dd061e",
+  "prompts": {},
+  "sessions": {
+    "s_1c001696901f9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b3e83c21-d0a2-464a-9dd5-a5557e744112",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "KaiNova Sisters <kainovasisters@agent.ai>"
+    }
+  }
+}
