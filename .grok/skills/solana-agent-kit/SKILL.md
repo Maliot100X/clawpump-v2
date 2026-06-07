@@ -1,6 +1,7 @@
 ---
 name: solana-agent-kit
-description: Use this skill when building or extending AI agents that need to autonomously interact with Solana protocols. Covers 60+ actions including token operations (SPL/Token-2022), NFT minting via Metaplex, DeFi (Jupiter swaps, Raydium/Orca/Meteora pools and liquidity), staking, bridging, domain registration, and more. Compatible with LangChain, Vercel AI SDK, Eliza, and direct agent loops. Installs the @solana-agent-kit packages and teaches correct usage with Helius RPC, Jupiter, Meteora DBC for custom quote like CLAW. Typical triggers: "add Solana actions to my agent", "make agent trade/swap/launch on Solana", "integrate Solana Agent Kit for ClawPump launches".
+description: |
+  Use this skill when building or extending AI agents that need to autonomously interact with Solana protocols. Covers 60+ actions including token operations (SPL/Token-2022), NFT minting via Metaplex, DeFi (Jupiter swaps, Raydium/Orca/Meteora pools and liquidity), staking, bridging, domain registration, and more. Compatible with LangChain, Vercel AI SDK, Eliza, and direct agent loops. Installs the @solana-agent-kit packages and teaches correct usage with Helius RPC, Jupiter, Meteora DBC for custom quote like CLAW. Typical triggers include "add Solana actions to my agent", "make agent trade/swap/launch on Solana", "integrate Solana Agent Kit for ClawPump launches". Use alongside clawpump-agent for full platform (MCP handles any provider keys server-side; no agent env setup for Birdeye/Helius etc).
 ---
 # Solana Agent Kit Skill
 
@@ -45,8 +46,8 @@ You are an expert at integrating SendAI's Solana Agent Kit into AI agents for fu
 - For agentic launches with CLAW quote: Combine with Meteora DBC SDK + ClawPump API (upload/launch/earnings with 65% share to agentId).
 - Check holder tiers (Cub 10k CLAW, Lion 100k, Apex 1M) using Birdeye or on-chain before launch.
 - Use Helius for tx history, DAS for assets, webhooks for real-time.
-- Birdeye for prices, charts, portfolio (key: 816325a6003540e59f439b9d578d3ad7).
-- Always use provided keys securely (env, never hardcode).
+- Birdeye for prices, charts, portfolio (platform/MCP handles any data provider keys server-side; your agent uses public or its own wallet only).
+- Always use platform/MCP for any provider calls (no agent env keys needed).
 
 ## Best Practices & Safety
 - Use Helius RPC for reliability (user keys provided).

@@ -1,6 +1,7 @@
 ---
 name: meteora-dbc
-description: Use this when building token launches, liquidity pools, AMMs, or bonding curves on Meteora for Solana. Specifically for Dynamic Bonding Curve (DBC) with custom quote_mint (e.g. CLAW instead of SOL), graduation to DAMM pool, DLMM, vaults. Covers SDK usage for create pool, swap, add liquidity, config with quote_mint, fee structures, and integration with launchpads like ClawPump. Typical triggers: "launch token with custom quote on Meteora DBC", "create bonding curve for CLAW", "graduate pool to DAMM", "add Meteora liquidity for agent token".
+description: |
+  Use this when building token launches, liquidity pools, AMMs, or bonding curves on Meteora for Solana. Specifically for Dynamic Bonding Curve (DBC) with custom quote_mint (e.g. CLAW instead of SOL), graduation to DAMM pool, DLMM, vaults. Covers SDK usage for create pool, swap, add liquidity, config with quote_mint, fee structures, and integration with launchpads like ClawPump. Typical triggers include "launch token with custom quote on Meteora DBC", "create bonding curve for CLAW", "graduate pool to DAMM", "add Meteora liquidity for agent token". Use with clawpump-agent (MCP server handles keys; no agent env for providers).
 ---
 # Meteora Dynamic Bonding Curve (DBC) & DeFi Skill
 
@@ -59,7 +60,7 @@ For ClawPump integration:
 - Use Helius for priority fees, webhooks on pool events.
 - For agentic: Wrap in try/catch, confirm with connection.getSignatureStatus.
 - Respect ClawPump tokenomics exactly (10k CLAW launch fee, 1% trade split).
-- Never hardcode keys; use env (Neon, Birdeye 816325a6003540e59f439b9d578d3ad7, Helius 9a468116-ce99-46d4-9adf-2568be3cf1b4 + RPCs).
+- Never hardcode keys; the platform/MCP uses any data/on-chain providers server-side (your agent only uses public wallet actions or MCP tools).
 
 This enables the core "CLAW as quote instead of SOL" for the entire ClawPump vision. Read full Meteora docs + SDK examples when implementing.
 

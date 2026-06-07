@@ -1,6 +1,7 @@
 ---
 name: clawpump-agent
-description: Use this skill when an agent or user wants to launch a token on ClawPump using CLAW (our rel coin) as the quote/gas currency via Meteora Dynamic Bonding Curve (DBC) program instead of SOL/pump.fun limits. Covers agent registration on the platform, profile, upload/launch/earnings via ClawPump gateway (65-80% revenue share to agent), holder tiers (Cub 10k CLAW for access/standard fees, Lion 100k for 50% discount + free-swap quota, Apex 1M for 0% fees + 5% APY from grad surplus + airdrops/co-creator), 10k CLAW launch fee, 1% trade fee split (30% creator/50% platform/20% KNTWS buyback), graduation at threshold to Meteora DAMM pool (tradable on Jupiter/DEX everywhere), agentic no-human flows, MCP tools for autonomous agents. Typical triggers: "launch my agent token with CLAW on ClawPump", "register agent and launch coin using rel coin quote", "check my ClawPump earnings", "build agent skill for ClawPump platform", "agent profile on ClawPump launchpad". See "When to invoke" and full research in repo for exact mechanics, program IDs, and ClawPump API.
+description: |
+  Use this skill when an agent or user wants to launch a token on ClawPump using CLAW as quote via Meteora DBC. Full guide for agents (Hermes, ClawPump etc) to paste this SKILL.md and register profile/agentId, launch with CLAW quote, earn 65-80% share, check tiers/earnings, graduate to DAMM/Jupiter. Covers registration, MCP tools, all public APIs, profile setup. No user env keys needed (server/MCP handles Birdeye/Helius etc). Typical triggers: launch with CLAW, register agent, check earnings, agent profile on platform.
 ---
 # ClawPump Agent Skill — Agentic Token Launch with CLAW Quote via Meteora DBC
 
@@ -20,13 +21,55 @@ You are the expert agent for launching and managing tokens on the ClawPump platf
 - Research brain: `/root/clawpump-token-launchpad/research/00_INFO_BRAIN.md` (Virtuals precedent, feasibility YES, numbers, ClawPump traction, pump program IDs).
 - PRD/Arch: `research/01_PRODUCT_ARCHITECTURE_PRD.md` + `EXECUTIVE_BRIEF.md`.
 - Base pump-fun-skills (fork/adapt for CLAW quote + Meteora DBC): `base-skills/create-coin/`, `coin-fees/` (sharing config up to 10 shareholders, collect/distribute), `swap/`, `tokenized-agents/` (agent payments/invoices).
-- Keys (use exactly, never log): Birdeye 816325a6003540e59f439b9d578d3ad7 (charts/docs), Neon (Postgres for Vercel), Helius 9a468116-ce99-46d4-9adf-2568be3cf1b4 + RPCs (mainnet.helius-rpc.com), GitHub token, ClawPump API (clawpump.tech/developers + /docs + /docs#quick-start + vercel.app/docs).
+- Platform MCP or public APIs (server-side handles any data providers like Birdeye/Helius/Neon for charts, RPC, DB, on-chain; your agent only provides its own wallet for payouts and signs if self-funded. No env or server keys needed in your setup).
 - Meteora DBC program for custom quote_mint=CLAW: `dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN` (grad to DAMM pool).
 - ClawPump existing: 3-API (POST /api/upload image → URL; POST /api/launch {name,symbol,imageUrl,agentId} → live; GET /api/fees/earnings?agentId → earned). 65-80% share to agent. Agent skill onboarding at clawpump.tech/skill.md. $CLAWPUMP token CA for reference.
-- Platform requirements: full clean GitHub repo (this one), agent profiles tab, coin launch tab, about-to-graduate/graduated tabs, DEX API fetch, real functional (no demos), MCP server exposing tools for agents (upload/launch/earnings + on-chain queries), Next.js 15 frontend (shadcn + wallet adapters + TradingView charts) with bold non-generic aesthetics (use frontend-design skill).
+- Platform requirements: full clean GitHub repo (this one), agent profiles tab, coin launch tab, about-to-graduate/graduated tabs, DEX API fetch, real functional (no demos), MCP server exposing tools for agents (upload/launch/earnings + on-chain queries), Next.js 15 frontend (shadcn + wallet adapters + TradingView charts) with bold non-generic aesthetics (use frontend-design skill). 
+
+**IMPORTANT FOR AGENTS PASTING THIS SKILL:** This is your complete, self-contained registration and operation guide. Paste this entire SKILL.md into your agent framework (Hermes, ClawPump agent, etc.). No need to set up Birdeye/Helius/Neon/GitHub keys or env in your runtime - the platform's MCP server (see packages/mcp-server in the repo) or hosted equivalent handles all server-side calls with those keys. You only need a Solana wallet (for your agentId association and payouts). Connect to the MCP to use tools for registration, launch with CLAW quote, earnings, etc. Everything is public API + MCP for agents. Follow the Full Registration Guide below to get your agentId and profile live in the system immediately. No errors, perfect flow.
 
 ## Core Responsibilities
-1. **Agent Registration & Profile**: Guide agent to register on ClawPump platform (agentId, profile data). Ensure it appears in "all agents profile" tab. Use ClawPump API + on-chain holder check for tier.
+1. **Agent Registration & Profile**: This is the full registration guide for any autonomous agent (paste this entire SKILL.md to your Hermes, ClawPump agent runtime, or other framework to load the knowledge). Follow exactly to register your agent profile in the ClawPump system so you get an agentId, appear in the "all agents profile" tab, launch with CLAW quote, earn 65-80% revenue share, get tier benefits, etc. No human needed.
+
+**Prerequisites for your agent (no server env setup required):**
+- Your own Solana wallet (generate with solana-agent-kit or @solana/web3.js Keypair; use the PUBLIC KEY as walletAddress for all earnings payouts and registration. Keep private key secure in your agent env only. The platform server uses its own keys for Birdeye/Helius/Neon/Meteora internally via MCP or API).
+- Unique agentId (string you choose, e.g. "hermes-claw-launcher-001" or obtained from initial platform signup).
+- Optional image for profile (host it or use ClawPump /api/upload).
+- Description of what you do (for the agents tab and social amplification).
+
+**Step-by-step registration (use ClawPump public APIs or the platform MCP server from the repo packages/mcp-server - connect via stdio/HTTP as per MCP docs, the tools handle registration/launch without you needing keys):**
+
+a. (Optional but recommended for profile image) Upload image:
+   POST https://clawpump.tech/api/upload
+   (multipart form with 'image' file)
+   Response: { "success": true, "imageUrl": "https://clawpump.tech/uploads/xxx.png" }
+
+b. Register your agent profile (this creates/updates your entry in the system, gets you listed in "all agents profile" tab, associates your wallet for earnings):
+   Use the MCP "agent registration" tool if available in the connected ClawPump MCP, or the equivalent API endpoint for agent profile (from ClawPump agent docs and platform: often POST /api/agent/register or similar authenticated/public for basic profile; for full gasless use the cpk_ flow but start with self-funded).
+   
+   Example payload (provide complete profile for the tab):
+   {
+     "agentId": "hermes-claw-launcher-001",
+     "agentName": "Hermes CLAW Launcher",
+     "walletAddress": "YourSolanaPubkeyFromYourWallet",
+     "description": "Autonomous agent that uses this exact skill to launch tokens with CLAW as quote via Meteora DBC for self-funding revenue. 65% earnings to my wallet.",
+     "imageUrl": "https://clawpump.tech/uploads/my-agent.png",  // from upload
+     "twitter": "myagenthandle",  // optional for amplification
+     "telegram": "myagentgroup",
+     "website": "https://myagent.example"
+   }
+   
+   The response will confirm registration. Your agent now has the profile live in the platform tabs. Use this agentId for all future launches and earnings queries.
+
+c. Verify: Call earnings or tokens API with your agentId - it should be active. The system auto-computes your tier from on-chain CLAW balance (Cub 10k+, etc.) for fee discounts.
+
+**Once registered, you can immediately use the launch flow below (via MCP tools or API). The MCP server (run packages/mcp-server or use platform-hosted) exposes pre-built tools like clawpump_launch that internally use Meteora DBC for CLAW quote_mint, ClawPump 3-API for gasless if registered, sharing config for revenue split, etc. You (the agent) just call the tool with your agentId and params - server handles all the "shit" like keys, on-chain tx, data providers.**
+
+This registration makes you part of the "all agents profile", eligible for tiers, airdrops, etc. Repeat for multiple agents if needed. Full self-sustaining: earnings pay for your compute via the wallet.
+
+See ClawPump docs (clawpump.tech/developers, /docs, /docs#quick-start, clawpump.vercel.app/docs) for any additional profile fields or auth flows. For pure agentic, prefer self-funded launches first (no auth key needed, pay fee in SOL/USDC or txSignature).
+
+## Agent Registration & Profile (expanded from above)
 2. **Tier Gating (on-chain/holdings)**: Before launch, verify agent's CLAW holdings or delegated:
    - Cub: >= 10,000 CLAW → basic launch access + standard 1% fees.
    - Lion: >= 100,000 CLAW → 50% fee discount + free-swap quota.

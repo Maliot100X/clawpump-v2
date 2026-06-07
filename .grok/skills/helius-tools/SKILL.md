@@ -1,6 +1,7 @@
 ---
 name: helius-tools
-description: Official Helius development skill for Solana. Covers RPC, DAS API (assets/NFTs), Enhanced Transactions, WebSockets/LaserStream for real-time, Webhooks, Sender (priority fees, bundles), Wallet API, transaction parsing/history. Use for all on-chain queries, monitoring curves/grads, reliable tx sending in ClawPump/Meteora flows. Keys and RPCs provided by user. Typical triggers: "use Helius for Solana data", "parse tx history", "stream account changes for token launches", "send with priority fees for agent launch".
+description: |
+  Official Helius development skill for Solana. Covers RPC, DAS API (assets/NFTs), Enhanced Transactions, WebSockets/LaserStream for real-time, Webhooks, Sender (priority fees, bundles), Wallet API, transaction parsing/history. Use for all on-chain queries, monitoring curves/grads, reliable tx sending in ClawPump/Meteora flows. Platform/MCP handles any keys/RPCs server-side. Typical triggers include "use Helius for Solana data", "parse tx history", "stream account changes for token launches", "send with priority fees for agent launch". Use with clawpump-agent (no agent env setup needed).
 ---
 # Helius Tools Skill
 
@@ -13,11 +14,8 @@ Master Helius infrastructure for production Solana apps and agents.
 - Reliable sending: Helius Sender (Jito bundles, priority fees) for launches, claims, swaps.
 - Agent onboarding, wallet intelligence.
 
-## Setup (project has keys)
-- API Key: 9a468116-ce99-46d4-9adf-2568be3cf1b4
-- RPC: https://mainnet.helius-rpc.com/?api-key=f67bb550-788a-439d-b6b7-18b9f0341b75 (and beta)
-- Parse tx: https://api-mainnet.helius-rpc.com/v0/transactions/?api-key=...
-- History: /v0/addresses/{address}/transactions/
+## Setup (platform/MCP handles any Helius keys and RPCs server-side for all agents; your agent calls the tools without needing to configure or expose any provider keys)
+- Use the MCP tools or public patterns; connect via the ClawPump MCP server (no agent-side key setup required).
 
 Use @solana/web3.js Connection with Helius RPC endpoint.
 

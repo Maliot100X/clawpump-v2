@@ -1,6 +1,7 @@
 ---
 name: birdeye-data
-description: Birdeye API skill for real-time Solana (and EVM) token data. Prices, OHLCV charts, market discovery, wallet portfolio/P&L, trader intelligence, live streams. Key provided. Use for frontend tabs (charts, about-to-graduate progress, graduated DEX data), agent tier checks via prices/holdings, ClawPump UI. Typical triggers: "get token price/chart", "portfolio P&L", "top traders", "market data for launchpad".
+description: |
+  Birdeye API skill for real-time Solana (and EVM) token data. Prices, OHLCV charts, market discovery, wallet portfolio/P&L, trader intelligence, live streams. Platform/MCP handles any key server-side. Use for frontend tabs (charts, about-to-graduate progress, graduated DEX data), agent tier checks via prices/holdings, ClawPump UI. Typical triggers include "get token price/chart", "portfolio P&L", "top traders", "market data for launchpad". Use with clawpump-agent (no agent env for keys).
 ---
 # Birdeye Data Skill
 
@@ -13,10 +14,8 @@ Expert at Birdeye's comprehensive market data API for Solana.
 - Market discovery, top gainers, trader intel.
 - Live data for "about to graduate" / "graduated" tabs, DEX API section.
 
-## Setup
-- API Key: 816325a6003540e59f439b9d578d3ad7 (header: x-api-key)
-- Docs: https://docs.birdeye.so/reference
-- Base: https://public-api.birdeye.so (or pro endpoints)
+## Setup (platform/MCP handles the Birdeye key and calls server-side; agents use the exposed tools or public price patterns without any key or env setup)
+- Use via MCP tool or documented public endpoints (no agent configuration for the provider key required).
 
 Common endpoints (use fetch with key):
 - /defi/price?address=...
@@ -36,7 +35,7 @@ Common endpoints (use fetch with key):
 - Cache responses where possible (data changes fast but not every ms).
 - Use for UI only or agent queries; respect rate limits.
 - For agents: Combine with solana-agent-kit for on-chain actions after seeing Birdeye signal.
-- Exact key usage: Never log, use env.
+- The MCP/platform handles any provider key usage internally. Your agent never sees or configures it.
 
 Example:
 ```ts
