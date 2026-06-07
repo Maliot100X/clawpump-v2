@@ -30,19 +30,18 @@ ClawPump gateway (public, no key for core):
 - `/graduated` — Graduated tokens + DEX links (Jupiter), volume.
 - `/dex-api` — Birdeye/Helius powered data tables/charts (prices, holders, tx history via user RPCs).
 
-**Keys / Env** (copy from `.env.example`, fill your values — never commit real secrets):
+**Keys / Env** (copy from `.env.example`, fill your values — never commit real secrets; real values go only into your Vercel project Environment Variables, which are encrypted and not public):
 ```
-NEON_DATABASE_URL=...
-BIRDEYE_API_KEY=816325a6003540e59f439b9d578d3ad7
-HELIUS_API_KEY=9a468116-ce99-46d4-9adf-2568be3cf1b4
-HELIUS_RPC=https://mainnet.helius-rpc.com/?api-key=...
-GITHUB_TOKEN=ghp_...
+NEON_DATABASE_URL=your_neon_url_here
+BIRDEYE_API_KEY=your_birdeye_key_here
+HELIUS_API_KEY=your_helius_key_here
+HELIUS_RPC=https://mainnet.helius-rpc.com/?api-key=your_key_here
+GITHUB_TOKEN=your_github_pat_here
 CLAWPUMP_API=https://clawpump.tech
 METEORA_DBC_PROGRAM_ID=dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN
-# CLAW_MINT=DMvsGEm3VZLfJCyQUnTnhLdH7vyFP9oQSFcrcrgBCLAW (default in code)
-# Multiple RPCs supported for parse/tx/history
+# CLAW_MINT=your_claw_mint_here (for on-chain if needed)
 ```
-Use in MCP (dotenv) + web (Next API routes + client via server proxies). Real on-chain via @solana/web3.js + Helius/Birdeye.
+Server-side only (MCP + Next API routes use process.env; client never sees raw keys). .env.example has placeholders only.
 
 ## Holder Tiers (from clawpump-agent skill + research)
 - **Cub**: >= 10,000 CLAW → basic access + standard fees
