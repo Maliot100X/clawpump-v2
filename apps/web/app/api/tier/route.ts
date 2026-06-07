@@ -1,44 +1,74 @@
+// GET /api/tier?wallet=<solanaPubkey>
+// Real on-chain CLAW balance via Helius RPC + spl-token ATA lookup.
+// Tier thresholds: Cub 10k, Lion 100k, Apex 1M CLAW.
+
 import { NextRequest, NextResponse } from "next/server";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token";
+import { getAssociatedTokenAddress, getAccount, getMint } from "@solana/spl-token";
+import { CLAW_MINT } from "@/lib/dexscreener";
 
-const HELIUS_RPC = process.env.HELIUS_RPC || (process.env.HELIUS_API_KEY ? `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}` : "https://api.mainnet-beta.solana.com");
-const CLAW_MINT = process.env.CLAW_MINT || "DMvsGEm3VZLfJCyQUnTnhLdH7vyFP9oQSFcrcrgBCLAW";
+export const runtime = "nodejs";
+export const revalidate = 0;
+
+const HELIUS_RPC =
+  process.env.HELIUS_RPC ||
+  (process.env.HELIUS_API_KEY
+    ? `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
+    : "https://api.mainnet-beta.solana.com");
+
 const connection = new Connection(HELIUS_RPC, "confirmed");
 
+function tierFor(balance: number) {
+  if (balance >= 1_000_000) return "Apex";
+  if (balance >= 100_000) return "Lion";
+  if (balance >= 10_000) return "Cub";
+  return "None";
+}
+
 export async function GET(req: NextRequest) {
-  const { searchParams } = new URL(req.url);
-  const wallet = searchParams.get("wallet");
-  if (!wallet) return NextResponse.json({ error: "wallet required" }, { status: 400 });
+  const wallet = req.nextUrl.searchParams.get("wallet");
+  if (!wallet) {
+    return NextResponse.json({ error: "wallet required" }, { status: 400 });
+  }
+
+  let owner: PublicKey;
+  let mint: PublicKey;
+  try {
+    owner = new PublicKey(wallet);
+    mint = new PublicKey(CLAW_MINT);
+  } catch (e) {
+    return NextResponse.json(
+      { error: `invalid pubkey: ${e instanceof Error ? e.message : e}` },
+      { status: 400 },
+    );
+  }
 
   try {
-    const owner = new PublicKey(wallet);
-    const clawMint = new PublicKey(CLAW_MINT);
-    const ata = await getAssociatedTokenAddress(clawMint, owner);
-    let balance = 0;
+    // Look up the mint's actual decimals so we don't hard-code wrong.
+    const mintInfo = await getMint(connection, mint);
+    const ata = await getAssociatedTokenAddress(mint, owner);
+    let raw = 0n;
     try {
-      const account = await getAccount(connection, ata);
-      balance = Number(account.amount) / 1_000_000; // 6 decimals assumption for CLAW
+      const acct = await getAccount(connection, ata);
+      raw = acct.amount;
     } catch {
-      balance = 0;
+      raw = 0n; // ATA doesn't exist -> 0 balance
     }
-
-    let tier: string = "None";
-    if (balance >= 1_000_000) tier = "Apex";
-    else if (balance >= 100_000) tier = "Lion";
-    else if (balance >= 10_000) tier = "Cub";
-
+    const balance = Number(raw) / 10 ** mintInfo.decimals;
+    const tier = tierFor(balance);
     return NextResponse.json({
       wallet,
       clawMint: CLAW_MINT,
       balanceClaw: balance,
       tier,
       canLaunch: tier !== "None",
-      thresholds: { Cub: 10000, Lion: 100000, Apex: 1000000 },
-      note: "Real on-chain via Helius RPC from server .env. 10k CLAW min per clawpump-agent skill.",
+      thresholds: { Cub: 10_000, Lion: 100_000, Apex: 1_000_000 },
       source: "helius",
     });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message, wallet, clawMint: CLAW_MINT }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json(
+      { error: e instanceof Error ? e.message : String(e), wallet, clawMint: CLAW_MINT },
+      { status: 502 },
+    );
   }
 }

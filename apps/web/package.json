@@ -13,6 +13,7 @@
     "@coral-xyz/anchor": "^0.32.1",
     "@jup-ag/api": "^6.0.48",
     "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.9",
+    "@neondatabase/serverless": "^0.10.4",
     "@radix-ui/react-slot": "^1.2.5",
     "@radix-ui/react-tabs": "^1.1.14",
     "@solana/spl-token": "^0.4.14",
