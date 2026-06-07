@@ -1,7 +1,6 @@
 ---
 name: meteora-dbc
-description: |
-  Use this when building token launches, liquidity pools, AMMs, or bonding curves on Meteora for Solana. Specifically for Dynamic Bonding Curve (DBC) with custom quote_mint (e.g. CLAW instead of SOL), graduation to DAMM pool, DLMM, vaults. Covers SDK usage for create pool, swap, add liquidity, config with quote_mint, fee structures, and integration with launchpads like ClawPump. Typical triggers include "launch token with custom quote on Meteora DBC", "create bonding curve for CLAW", "graduate pool to DAMM", "add Meteora liquidity for agent token". Use with clawpump-agent (MCP server handles keys; no agent env for providers).
+description: "For building Meteora DBC/AMM/liquidity on Solana, especially custom quote_mint=CLAW for ClawPump launches, graduation to DAMM, etc. SDK usage for pools, swaps, fees. Use with clawpump-agent (MCP handles any keys server-side)."
 ---
 # Meteora Dynamic Bonding Curve (DBC) & DeFi Skill
 

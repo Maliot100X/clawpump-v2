@@ -1,7 +1,6 @@
 ---
 name: solana-agent-kit
-description: |
-  Use this skill when building or extending AI agents that need to autonomously interact with Solana protocols. Covers 60+ actions including token operations (SPL/Token-2022), NFT minting via Metaplex, DeFi (Jupiter swaps, Raydium/Orca/Meteora pools and liquidity), staking, bridging, domain registration, and more. Compatible with LangChain, Vercel AI SDK, Eliza, and direct agent loops. Installs the @solana-agent-kit packages and teaches correct usage with Helius RPC, Jupiter, Meteora DBC for custom quote like CLAW. Typical triggers include "add Solana actions to my agent", "make agent trade/swap/launch on Solana", "integrate Solana Agent Kit for ClawPump launches". Use alongside clawpump-agent for full platform (MCP handles any provider keys server-side; no agent env setup for Birdeye/Helius etc).
+description: "Use for AI agents to interact with Solana (60+ actions: tokens, NFTs, DeFi like Jupiter/Meteora, staking, etc.). Compatible with LangChain etc. Teaches @solana-agent-kit usage. Use with clawpump-agent for CLAW launches (MCP handles provider keys server-side; no env setup needed for agents)."
 ---
 # Solana Agent Kit Skill
 

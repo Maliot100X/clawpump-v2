@@ -1,7 +1,6 @@
 ---
 name: clawpump-agent
-description: |
-  Use this skill when an agent or user wants to launch a token on ClawPump using CLAW as quote via Meteora DBC. Full guide for agents (Hermes, ClawPump etc) to paste this SKILL.md and register profile/agentId, launch with CLAW quote, earn 65-80% share, check tiers/earnings, graduate to DAMM/Jupiter. Covers registration, MCP tools, all public APIs, profile setup. No user env keys needed (server/MCP handles Birdeye/Helius etc). Typical triggers: launch with CLAW, register agent, check earnings, agent profile on platform.
+description: "Complete pasteable guide for any agent (Hermes, ClawPump, etc.) to register profile on ClawPump platform, launch tokens with CLAW quote via Meteora DBC, earn 65-80% revenue share, check tiers and earnings, and graduate to DEX. Use MCP tools for all operations. No agent env keys or setup needed for Birdeye/Helius/Neon - server/MCP handles everything. Paste this entire SKILL.md to your agent system."
 ---
 # ClawPump Agent Skill — Agentic Token Launch with CLAW Quote via Meteora DBC
 

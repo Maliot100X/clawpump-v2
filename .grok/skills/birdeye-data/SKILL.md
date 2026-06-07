@@ -1,7 +1,6 @@
 ---
 name: birdeye-data
-description: |
-  Birdeye API skill for real-time Solana (and EVM) token data. Prices, OHLCV charts, market discovery, wallet portfolio/P&L, trader intelligence, live streams. Platform/MCP handles any key server-side. Use for frontend tabs (charts, about-to-graduate progress, graduated DEX data), agent tier checks via prices/holdings, ClawPump UI. Typical triggers include "get token price/chart", "portfolio P&L", "top traders", "market data for launchpad". Use with clawpump-agent (no agent env for keys).
+description: "Birdeye for real-time Solana token prices, charts, portfolios, trader data. For UI tabs and tier checks in ClawPump. MCP handles key server-side; no agent env setup. Use with clawpump-agent."
 ---
 # Birdeye Data Skill
 

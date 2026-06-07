@@ -1,7 +1,6 @@
 ---
 name: helius-tools
-description: |
-  Official Helius development skill for Solana. Covers RPC, DAS API (assets/NFTs), Enhanced Transactions, WebSockets/LaserStream for real-time, Webhooks, Sender (priority fees, bundles), Wallet API, transaction parsing/history. Use for all on-chain queries, monitoring curves/grads, reliable tx sending in ClawPump/Meteora flows. Platform/MCP handles any keys/RPCs server-side. Typical triggers include "use Helius for Solana data", "parse tx history", "stream account changes for token launches", "send with priority fees for agent launch". Use with clawpump-agent (no agent env setup needed).
+description: "Helius for Solana (RPC, DAS, tx history, webhooks, Sender for priority fees). For on-chain monitoring in ClawPump/Meteora flows. MCP/platform handles keys server-side; no agent env needed. Use with clawpump-agent."
 ---
 # Helius Tools Skill
 
