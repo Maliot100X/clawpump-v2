@@ -1,31 +1,30 @@
 {
-  "name": "clawpump-token-launchpad",
-  "private": true,
+  "name": "clawpump-web",
   "version": "0.1.0",
-  "description": "ClawPump Token Launchpad - Agentic Solana launch platform with CLAW quote via Meteora DBC. First production slice: MCP + beautiful Next tabs + real 3-API + skill integration.",
+  "private": true,
   "scripts": {
-    "dev:web": "cd apps/web && npm run dev",
-    "start:mcp": "cd packages/mcp-server && npm start",
-    "build:web": "cd apps/web && npm run build",
-    "build:mcp": "cd packages/mcp-server && npm run build",
-    "build": "npm run build:web && npm run build:mcp",
-    "typecheck:web": "cd apps/web && npm run typecheck",
-    "typecheck:mcp": "cd packages/mcp-server && npm run build",
-    "lint:web": "cd apps/web && npm run lint",
-    "install:all": "cd packages/mcp-server && npm install && cd ../../apps/web && npm install"
-  },
-  "engines": {
-    "node": ">=18"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.32.1",
-    "@meteora-ag/dynamic-amm-sdk": "^1.4.1",
-    "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.9",
-    "@modelcontextprotocol/sdk": "^1.29.0",
-    "@solana/spl-token": "^0.4.14",
     "@solana/web3.js": "^1.98.4",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "zod": "^4.4.3"
+    "framer-motion": "^11.11.0",
+    "lucide-react": "^0.400.0",
+    "next": "15.0.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
   }
 }
