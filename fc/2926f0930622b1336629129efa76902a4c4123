@@ -1,0 +1,20 @@
+apps/web/package.json
+  s_1c001696901f9b::t_c8a60bba609ae6 30
+  s_1c001696901f9b::t_99de335a2dacc1 42-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "fc2926f0930622b1336629129efa76902a4c4123",
+  "prompts": {},
+  "sessions": {
+    "s_1c001696901f9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b3e83c21-d0a2-464a-9dd5-a5557e744112",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "KaiNova Sisters <kainovasisters@agent.ai>"
+    }
+  }
+}
