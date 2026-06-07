@@ -1,0 +1,160 @@
+base-skills/swap/scripts/lib/constants.mjs
+  ai_agent 1-12
+base-skills/create-coin/scripts/lib/env.mjs
+  ai_agent 1-18
+base-skills/swap/package.json
+  ai_agent 1-25
+base-skills/swap/scripts/build-buy-bonding-tx.mjs
+  ai_agent 1-181
+postcss.config.mjs
+  s_1c001696901f9b::t_c3ee7f7c7ec220 1
+base-skills/coin-fees/package.json
+  ai_agent 1-24
+base-skills/create-coin/package-lock.json
+  ai_agent 1-1031
+base-skills/swap/scripts/lib/coin-resolve.mjs
+  ai_agent 1-46
+base-skills/swap/scripts/lib/env.mjs
+  ai_agent 1-18
+base-skills/create-coin/references/METADATA.md
+  ai_agent 1-162
+base-skills/tokenized-agents/SKILL.md
+  ai_agent 1-496
+base-skills/create-coin/package.json
+  ai_agent 1-22
+base-skills/tokenized-agents/WALLET_INTEGRATION.md
+  ai_agent 1-88
+base-skills/create-coin/direct-launch-watch-sell.mjs
+  ai_agent 1-19
+base-skills/create-coin/scripts/lib/coin-api.mjs
+  ai_agent 1-38
+base-skills/swap/package-lock.json
+  ai_agent 1-1058
+base-skills/coin-fees/scripts/build-collect-fee-tx.mjs
+  ai_agent 1-174
+next-env.d.ts
+  s_1c001696901f9b::t_29b1cde03f5831 5
+base-skills/swap/SKILL.md
+  ai_agent 1-426
+base-skills/tokenized-agents/references/SCENARIOS.md
+  ai_agent 1-45
+vercel.json
+  s_104d174c2ac3b7::t_5ca5c49329418d 2-6
+base-skills/coin-fees/scripts/lib/constants.mjs
+  ai_agent 1-12
+tsconfig.json
+  s_1c001696901f9b::t_29b1cde03f5831 3-7,25-29,31-39
+base-skills/create-coin/scripts/lib/jito.mjs
+  ai_agent 1-84
+base-skills/swap/scripts/lib/jito.mjs
+  ai_agent 1-84
+base-skills/coin-fees/scripts/fetch-fee-info.mjs
+  ai_agent 1-208
+base-skills/swap/scripts/build-sell-amm-tx.mjs
+  ai_agent 1-166
+base-skills/create-coin/scripts/fetch-coin.mjs
+  ai_agent 1-58
+base-skills/create-coin/scripts/build-create-coin-tx.mjs
+  ai_agent 1-223
+base-skills/coin-fees/scripts/lib/args.mjs
+  ai_agent 1-74
+base-skills/create-coin/scripts/lib/args.mjs
+  ai_agent 1-74
+base-skills/README.md
+  ai_agent 1-122
+base-skills/create-coin/.gitignore
+  ai_agent 1
+base-skills/create-coin/scripts/lib/constants.mjs
+  ai_agent 1-12
+base-skills/coin-fees/scripts/fetch-distributable-info.mjs
+  ai_agent 1-234
+package.json
+  s_1c001696901f9b::t_99c3b5cb8f6b0a 30
+  s_104d174c2ac3b7::t_47abad5104d2ac 13-14,16-17,20,22,27-28,33-34
+  s_1c001696901f9b::t_6d86ee4c204cda 18
+  s_104d174c2ac3b7::t_a8dc96df371c31 15,19,21,24-25
+base-skills/create-coin/direct-launch-watch-sell-clean.mjs
+  ai_agent 1-139
+base-skills/create-coin/scripts/lib/tx-build.mjs
+  ai_agent 1-67
+base-skills/swap/scripts/lib/coin-api.mjs
+  ai_agent 1-38
+base-skills/tokenized-agents/SCENARIOS.md
+  ai_agent 1-45
+base-skills/create-coin/SKILL.md
+  ai_agent 1-308
+base-skills/coin-fees/scripts/fetch-coin.mjs
+  ai_agent 1-58
+base-skills/swap/scripts/fetch-coin.mjs
+  ai_agent 1-58
+base-skills/coin-fees/scripts/lib/coin-resolve.mjs
+  ai_agent 1-46
+base-skills/coin-fees/scripts/lib/env.mjs
+  ai_agent 1-18
+base-skills/create-coin/scripts/lib/coin-resolve.mjs
+  ai_agent 1-46
+base-skills/swap/scripts/lib/args.mjs
+  ai_agent 1-74
+base-skills/create-coin/direct-create-buy-noagent.mjs
+  ai_agent 1-119
+base-skills/coin-fees/scripts/lib/compute.mjs
+  ai_agent 1-82
+base-skills/swap/.gitignore
+  ai_agent 1
+base-skills/direct-launch-watch-sell.mjs
+  ai_agent 1-19
+base-skills/coin-fees/scripts/build-sharing-config-tx.mjs
+  ai_agent 1-319
+base-skills/tokenized-agents/references/WALLET_INTEGRATION.md
+  ai_agent 1-88
+base-skills/coin-fees/SKILL.md
+  ai_agent 1-457
+base-skills/coin-fees/scripts/lib/tx-build.mjs
+  ai_agent 1-67
+base-skills/create-coin/scripts/lib/compute.mjs
+  ai_agent 1-82
+base-skills/coin-fees/package-lock.json
+  ai_agent 2-3,8-9,11-15,22-24,31-33,79-82,84-86,88,90-91,94-123,126-130,133,136-145,148,151-155,157,160,163-166,169-172,175-188,191,194-198,200-203,206-210,212-217,220-231,233-236,239-245,248-262,264-267,270-277,280-283,288-289,296,299-303,305,308-311,314-317,320,323,326,329-332,334,340,353-356,358-360,362,364-365,368-371,374-378,381,384-387,390-391,393-394,397,400,403-406,409,412-415,418,421-424,427,430-433,436,439-443,445-449,451-454,457,460-463,466,469,472-475,477-478,481-508,510-511,514-517,520,523-526,529,532-535,538-546,549-552,555,558-575,578-579,582-585,587-588,591-595,597-601,603,606-609,612,615,618-621,624,627,630-633,636,639-642,645,648-651,654-657,660-670,672,675-679,681-684,686,689-693,695-700,702-711,713-714,717-740,742-743,746-749,752-763,765-766,769,772-782,784-793,796,799-807,810-813,815-819,822-826,829-831,839,866-880,882-884,891,895-897,979-987,990,993-997,1000-1002,1006,1040-1042,1044
+base-skills/swap/scripts/lib/tx-build.mjs
+  ai_agent 1-67
+base-skills/swap/scripts/build-sell-bonding-tx.mjs
+  ai_agent 1-155
+base-skills/coin-fees/.gitignore
+  ai_agent 1
+base-skills/swap/scripts/lib/compute.mjs
+  ai_agent 1-82
+base-skills/swap/scripts/build-buy-amm-tx.mjs
+  ai_agent 1-166
+base-skills/coin-fees/scripts/build-distribute-fees-tx.mjs
+  ai_agent 1-200
+base-skills/swap/scripts/print-balances.mjs
+  ai_agent 1-119
+base-skills/coin-fees/scripts/lib/coin-api.mjs
+  ai_agent 1-38
+base-skills/coin-fees/scripts/lib/jito.mjs
+  ai_agent 1-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "c25f868c63da0e9e76e3b8ee3fac03707d0d75da",
+  "prompts": {},
+  "sessions": {
+    "s_104d174c2ac3b7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "38c4f5e9-17ae-45dc-8afe-aa912c51d50b",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "KaiNova Sisters <kainovasisters@agent.ai>"
+    },
+    "s_1c001696901f9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b3e83c21-d0a2-464a-9dd5-a5557e744112",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "KaiNova Sisters <kainovasisters@agent.ai>"
+    }
+  }
+}
