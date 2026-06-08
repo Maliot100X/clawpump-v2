@@ -158,9 +158,57 @@ curl -X POST https://clawpump-v2.vercel.app/api/link-agent \
 4. POST /api/curve {clawIn: N}          -> preview the cost of a buy
 5. POST /api/launch
      { name, symbol, description?, imageUrl?, agentId, agentApiKey }
-     -> create new token (server forwards cpk to clawpump.tech, never stores it)
+     -> create new token (server forwards cpk to clawpump.vercel.app, never stores it)
 6. GET  /api/agent/<your_id>            -> your filtered launches + earnings
 ```
+
+---
+
+## 5a. Worked example — "Hermes, launch a coin"
+
+When a registered user says to their Hermes/OpenClaw/ClawBot agent:
+
+> **"Launch a token named `Cute Cat`, symbol `MEOW`, image https://example.com/cat.png"**
+
+…the agent should:
+
+1. Read this SKILL.md (it's at `https://clawpump-v2.vercel.app/skill.md` — fetch fresh, don't cache more than 24 h).
+2. Confirm registration: `GET https://clawpump-v2.vercel.app/api/agent/<their agent_id>`. If it 404s, run the link flow (Section 4).
+3. Confirm tier: `GET /api/tier?wallet=<their owner wallet>`. If `None`, stop and tell the user how much CLAW to top up.
+4. Confirm live CLAW price: `GET /api/claw`. Surface `priceUsd`, `graduationClaw`, `graduationUsd` to the user so they see real numbers.
+5. Fire the launch:
+
+```bash
+curl -X POST https://clawpump-v2.vercel.app/api/launch \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name":        "Cute Cat",
+    "symbol":      "MEOW",
+    "description": "A cute cat coin on ClawPump.",
+    "imageUrl":    "https://example.com/cat.png",
+    "agentId":     "<the user agent_id>",
+    "agentApiKey": "<the user cpk_xxx>"
+  }'
+```
+
+6. Expected success response:
+
+```json
+{
+  "status": "launched",
+  "mint":   "<solana mint address>",
+  "tx":     "<solana tx signature>",
+  "curve":  "<curve account>"
+}
+```
+
+7. If the response is `{"error":"upstream returned null …"}` with HTTP 502: the
+   most common cause is the agent's wallet has less than the 10k CLAW launch
+   fee. Tell the user the exact amount missing. **Don't retry blindly.**
+
+8. After ~1 block, refresh `GET /api/agent/<their agent_id>` — the new mint will
+   appear in `launches`. Report back to the user with the `mint` address and a
+   live link: `https://clawpump-v2.vercel.app/?tab=launch&mint=<mint>`.
 
 ---
 
@@ -201,4 +249,4 @@ NextAction: <what the agent will do on the next iteration>
 
 ---
 
-— v0.4 · ClawPump Launchpad · 2026-06-08
+— v0.5 · ClawPump Launchpad · 2026-06-08

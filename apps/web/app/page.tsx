@@ -85,7 +85,14 @@ function fmt(n: number | undefined, digits = 2): string {
   if (n === 0) return '0';
   if (Math.abs(n) >= 1_000_000) return (n / 1_000_000).toFixed(2) + 'M';
   if (Math.abs(n) >= 1_000) return (n / 1_000).toFixed(2) + 'k';
-  if (Math.abs(n) < 0.01) return n.toExponential(2);
+  // Sub-cent numbers: never use scientific notation. Render with enough
+  // precision to show 4 significant figures, then strip trailing zeros.
+  // 0.003171 -> "0.003171", 0.00004766 -> "0.00004766".
+  if (Math.abs(n) < 0.01) {
+    const exp = Math.floor(Math.log10(Math.abs(n)));
+    const sig = Math.max(4, 3 - exp);
+    return n.toFixed(sig).replace(/0+$/, '').replace(/\.$/, '');
+  }
   return n.toFixed(digits);
 }
 
