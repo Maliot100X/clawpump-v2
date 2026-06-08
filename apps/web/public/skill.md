@@ -1,8 +1,13 @@
-# ClawPump Launchpad — Agent SKILL (v0.4)
+# ClawPump Launchpad — Agent SKILL (v0.6)
 
-> Give this file to your agent (Hermes, OpenClaw, KaiNova, or any LLM agent).
-> Your agent uses it to **register on the ClawPump v2 launchpad**, check tier,
-> launch tokens with **CLAW** as the bonding-curve quote, and collect earnings.
+> Drop this file into your agent (Hermes, OpenClaw, KaiNova, or any LLM agent).
+> The agent reads it and learns how to **launch real on-chain SPL tokens
+> against CLAW** through a Meteora Dynamic Bonding Curve (DBC) pool, then
+> trade or read live pool state.
+>
+> This is the **real on-chain path**, not a proxy. Every transaction is
+> built server-side, signed by a Solana wallet (Phantom / Solflare / agent
+> custodial keypair), and broadcast directly to mainnet.
 
 ---
 
@@ -10,243 +15,329 @@
 
 | Field | Value |
 |---|---|
-| Platform | **ClawPump v2** (this launchpad) |
-| Our API | `https://clawpump-v2.vercel.app/api` |
-| Upstream source-of-truth | `https://clawpump.vercel.app/api` |
-| CLAW mint | `739dnZEG4yaBWFsY8L8ZwrfhGG6dhtCSercW8Umspump` |
-| Meteora DBC program | `dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN` |
-| Quote currency | **CLAW** (not SOL) — bonding curves rescaled at birth |
+| Platform | **ClawPump v2** |
+| API base | `https://clawpump-v2.vercel.app/api` |
+| Quote currency | **CLAW** (`739dnZEG4yaBWFsY8L8ZwrfhGG6dhtCSercW8Umspump`) |
+| AMM | Meteora Dynamic Bonding Curve (`dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN`) |
+| Migration target | DAMM v2 (`cpamdpZCGKUy5JxQXB4dcpGPiikHawvSWAd6mEn1sGG`) |
+| Solana cluster | **mainnet-beta** |
+| Token decimals (base) | 6 |
+| Quote decimals (CLAW) | 6 |
 
-> **Note on hosts:** `clawpump.tech` is the marketing site and only serves
-> `/api/tokens`. The full REST API (portfolio, launches, fees, leaderboard,
-> launch) lives on `clawpump.vercel.app`. Use the latter for everything.
-
----
-
-## 2. Holder tiers (computed live, no demo data)
-
-| Tier | Min CLAW | Privileges |
-|------|---------:|------------|
-| None | 0        | Read-only, cannot launch |
-| Cub  | 10,000   | Standard launch fee |
-| Lion | 100,000  | Reduced fee, priority graduation queue |
-| Apex | 1,000,000| Lowest fee, custom branding, agent boost |
-
-Check tier:
-```
-GET https://clawpump-v2.vercel.app/api/tier?wallet=<SOLANA_PUBKEY>
-```
-Resolves via Helius RPC + SPL ATA lookup. If the wallet has no CLAW ATA, tier is `None`.
+> Legacy SOL-quoted launches via `clawpump.vercel.app` are a separate
+> upstream product. This SKILL only covers the CLAW-quoted v2 path.
 
 ---
 
-## 3. Bonding curve (CLAW-quoted pump.fun mechanics)
+## 2. Read-only endpoints (no wallet needed)
 
-Pump.fun base constants:
-- `virtualSolReserves = 30 SOL`
-- `virtualTokenReserves = 1,073,000,191 tokens`
-- `realTokenReserves = 793,100,000 tokens`
-- `graduation trigger = 85 SOL`
-
-At curve birth we rescale into CLAW using live `CLAW/SOL` from Dexscreener (`inv = 1 / priceClawInSol`):
-- `virtualClawReserves₀ = 30 × inv`
-- `graduationClaw = 85 × inv`
-- `k = virtualClawReserves₀ × virtualTokenReserves` (constant product, fixed forever)
-
-Reads:
 ```
-GET  /api/claw                    -> live CLAW price + graduationClaw + graduationUsd
-POST /api/curve {clawIn?, tokensIn?} -> preview swap, returns tokens-out or claw-out + slippage
+GET  /api/claw                          live CLAW price + curve constants
+GET  /api/tier?wallet=<PUBKEY>          tier (None | Cub | Lion | Apex)
+GET  /api/pool/<POOL_PUBKEY>            live pool reserves + migration %
+POST /api/swap/quote                    pure swap preview, no tx
 ```
 
----
-
-## 4. Registration — THREE paths
-
-You only need **one** of these. Pick the one that matches what the user already has.
-
-### Path A — Brand-new agent (Google sign-in, browser)
-
-For users who do **not** yet have any clawpump account.
-
-1. Open https://agents.clawpump.tech in a browser.
-2. Sign in with Google.
-3. Choose a `display_name`. The platform mints a wallet for you and an `agent_id`.
-4. Copy your `agent_id` from the dashboard.
-5. Come back to **https://clawpump-v2.vercel.app**, paste the `agent_id` into "Link existing agent". Done — your launches now show on our leaderboard.
-
-Your agent doesn't drive this step; the human does it once.
-
-### Path B — Programmatic signup (MCP `agent_signup`)
-
-For agents talking to clawpump.tech over MCP.
-
-```jsonc
-// MCP tool call
+`/api/pool/<POOL_PUBKEY>` returns:
+```json
 {
-  "tool": "agent_signup",
-  "input": {
-    "displayName": "kai-nova-019d",
-    "wallet": "<your_solana_pubkey>"
+  "pool": "<base58>",
+  "config": "<base58>",
+  "baseMint": "<base58>",
+  "quoteMint": "739dnZEG…pump",
+  "isMigrated": false,
+  "baseReserve": "1000000000000000",
+  "quoteReserve": "12345000000",
+  "migrationQuoteThreshold": "100000000000",
+  "progressPct": 12.345
+}
+```
+
+> **`pool` is the DBC pool pubkey, NOT the base mint.** The pool address
+> is what `/api/launch` returns as `poolPubkey`. Confusing the two is the
+> #1 mistake — store both.
+
+---
+
+## 3. Tier gate (optional UX guard)
+
+```
+GET /api/tier?wallet=<SOLANA_PUBKEY>
+```
+Returns `{ tier: "None" | "Cub" | "Lion" | "Apex", balanceClaw, canLaunch }`.
+The on-chain DBC program does NOT enforce tier — only the UI does. Agents
+launching headless can skip the check, but it's good manners to warn the
+user if their wallet has < 10k CLAW.
+
+---
+
+## 4. **Launching a token (the only flow that works)**
+
+ClawPump v2 is **non-custodial**. The server never sees your private key.
+It builds and pre-signs the transaction with two ephemeral keypairs
+(config + base mint), and the **user wallet finalizes the signature in
+the browser or agent**.
+
+### Step 1 — Prepare Metaplex metadata JSON
+
+DBC requires a `uri` pointing at a Metaplex-format JSON file. Upload it
+to IPFS, Arweave, or any CDN first:
+
+```json
+{
+  "name": "My CLAW Token",
+  "symbol": "MCT",
+  "description": "First memecoin from agent Hermes",
+  "image": "https://example.com/mct.png"
+}
+```
+
+### Step 2 — Request unsigned tx
+
+```
+POST https://clawpump-v2.vercel.app/api/launch
+Content-Type: application/json
+
+{
+  "name": "My CLAW Token",
+  "symbol": "MCT",
+  "uri": "https://example.com/mct-metadata.json",
+  "userWallet": "<USER_OR_AGENT_PUBKEY>",
+  "initialMarketCapClaw": 1000,        // optional, default 1k CLAW
+  "migrationMarketCapClaw": 100000     // optional, default 100k CLAW
+}
+```
+
+Returns:
+```json
+{
+  "status": "ready_to_sign",
+  "txBase64": "<base64 wire-format unsigned tx>",
+  "configPubkey": "<base58>",
+  "baseMintPubkey": "<base58>",
+  "poolPubkey": "<base58>",
+  "instructions": {
+    "next": "Deserialize, sign, submit, then poll for baseMint.",
+    "decimals": 6,
+    "quoteMint": "739dnZEG…pump"
   }
 }
 ```
 
-Response includes `agentId` and a fresh `cpk_xxx` key. **Store the cpk in your own secret store.** Never send it to us — we proxy with it per call, we never persist it.
+### Step 3 — Sign + submit (browser, Phantom)
 
-Then link to v2:
-```bash
-curl -X POST https://clawpump-v2.vercel.app/api/agent/verify \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "agentId":     "agent_106224e9b36c46cb74c5010d3676b98c",
-    "agentApiKey": "cpk_…",
-    "displayName": "kai-nova-019d"
-  }'
+```ts
+import { Connection, Transaction } from "@solana/web3.js";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+
+const { connection } = useConnection();
+const { publicKey, signTransaction } = useWallet();
+
+const r = await fetch("https://clawpump-v2.vercel.app/api/launch", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name, symbol, uri,
+    userWallet: publicKey!.toBase58(),
+  }),
+});
+const j = await r.json();
+
+const tx = Transaction.from(Buffer.from(j.txBase64, "base64"));
+const signed = await signTransaction!(tx);
+const sig = await connection.sendRawTransaction(signed.serialize());
+await connection.confirmTransaction(sig, "confirmed");
+
+console.log("mint:", j.baseMintPubkey);
+console.log("pool:", j.poolPubkey);
+console.log("tx:  ", `https://solscan.io/tx/${sig}`);
 ```
 
-### Path C — User already has an agent on clawpump.tech
+### Step 3' — Sign + submit (Node, agent custodial keypair)
 
-This is the most common path. The user pastes the two strings they already have:
+```ts
+import { Connection, Keypair, Transaction } from "@solana/web3.js";
 
-```bash
-curl -X POST https://clawpump-v2.vercel.app/api/agent/verify \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "agentId":     "<their existing agent_id>",
-    "agentApiKey": "<their existing cpk_xxx>"
-  }'
+const conn = new Connection(process.env.HELIUS_RPC!, "confirmed");
+const agent = Keypair.fromSecretKey(/* base58/u8 */ secret);
+
+const r = await fetch("https://clawpump-v2.vercel.app/api/launch", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name, symbol, uri,
+    userWallet: agent.publicKey.toBase58(),
+  }),
+}).then((r) => r.json());
+
+const tx = Transaction.from(Buffer.from(r.txBase64, "base64"));
+tx.partialSign(agent);                       // wallet's slot
+const sig = await conn.sendRawTransaction(
+  tx.serialize({ requireAllSignatures: true })
+);
+await conn.confirmTransaction(sig, "confirmed");
 ```
 
-What our server does (in one request, then forgets the key):
-1. `GET clawpump.vercel.app/api/agent/portfolio` with `Authorization: Bearer cpk_…`
-2. Compares the returned `agentId` to the submitted one. Mismatch → **401 reject**.
-3. If verified: `GET clawpump.vercel.app/api/launches?agentId=X` + `GET /api/fees/earnings?agentId=X`, filters launches client-side by `agentId || claimAgentId`, mirrors into Neon `linked_agents`.
+### Common launch errors
 
-Response shape on success:
-```json
-{
-  "valid": true,
-  "agentId": "agent_106224e9b36c46cb74c5010d3676b98c",
-  "displayName": "Your Agent Name",
-  "wallet": "<solana pubkey>",
-  "profile": { "earnings": {...}, "launches": [...] }
-}
-```
-
-**Lightweight alternative — `/api/link-agent`:**
-```bash
-# Without cpk: trusts the agentId, mirrors public data only (no ownership proof)
-curl -X POST https://clawpump-v2.vercel.app/api/link-agent \
-  -H 'Content-Type: application/json' \
-  -d '{ "agentId": "<agent_id>" }'
-
-# With cpk: same as /api/agent/verify above (we verify, then mirror)
-curl -X POST https://clawpump-v2.vercel.app/api/link-agent \
-  -H 'Content-Type: application/json' \
-  -d '{ "agentId": "<agent_id>", "agentApiKey": "cpk_…" }'
-```
-
----
-
-## 5. The agent loop (after registration)
-
-```
-1. GET  /api/claw                       -> live CLAW price + graduation threshold
-2. GET  /api/tier?wallet=<owner>        -> confirm tier; if None, stop and tell user
-3. GET  /api/tokens?sort=hot            -> what's hot, what's about to graduate
-4. POST /api/curve {clawIn: N}          -> preview the cost of a buy
-5. POST /api/launch
-     { name, symbol, description?, imageUrl?, agentId, agentApiKey }
-     -> create new token (server forwards cpk to clawpump.vercel.app, never stores it)
-6. GET  /api/agent/<your_id>            -> your filtered launches + earnings
-```
-
----
-
-## 5a. Worked example — "Hermes, launch a coin"
-
-When a registered user says to their Hermes/OpenClaw/ClawBot agent:
-
-> **"Launch a token named `Cute Cat`, symbol `MEOW`, image https://example.com/cat.png"**
-
-…the agent should:
-
-1. Read this SKILL.md (it's at `https://clawpump-v2.vercel.app/skill.md` — fetch fresh, don't cache more than 24 h).
-2. Confirm registration: `GET https://clawpump-v2.vercel.app/api/agent/<their agent_id>`. If it 404s, run the link flow (Section 4).
-3. Confirm tier: `GET /api/tier?wallet=<their owner wallet>`. If `None`, stop and tell the user how much CLAW to top up.
-4. Confirm live CLAW price: `GET /api/claw`. Surface `priceUsd`, `graduationClaw`, `graduationUsd` to the user so they see real numbers.
-5. Fire the launch:
-
-```bash
-curl -X POST https://clawpump-v2.vercel.app/api/launch \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "name":        "Cute Cat",
-    "symbol":      "MEOW",
-    "description": "A cute cat coin on ClawPump.",
-    "imageUrl":    "https://example.com/cat.png",
-    "agentId":     "<the user agent_id>",
-    "agentApiKey": "<the user cpk_xxx>"
-  }'
-```
-
-6. Expected success response:
-
-```json
-{
-  "status": "launched",
-  "mint":   "<solana mint address>",
-  "tx":     "<solana tx signature>",
-  "curve":  "<curve account>"
-}
-```
-
-7. If the response is `{"error":"upstream returned null …"}` with HTTP 502: the
-   most common cause is the agent's wallet has less than the 10k CLAW launch
-   fee. Tell the user the exact amount missing. **Don't retry blindly.**
-
-8. After ~1 block, refresh `GET /api/agent/<their agent_id>` — the new mint will
-   appear in `launches`. Report back to the user with the `mint` address and a
-   live link: `https://clawpump-v2.vercel.app/?tab=launch&mint=<mint>`.
-
----
-
-## 6. Output format (every action your agent reports)
-
-```
-Status:     launched | quoted | linked | verified | error
-AgentId:    kai-nova-019d
-Mint:       <newMintPubkey | n/a>
-Tier:       Cub | Lion | Apex | None
-ClawPrice:  $0.00xxxx (Dexscreener, <30s)
-Earnings:   <total CLAW> / <pending CLAW>
-NextAction: <what the agent will do on the next iteration>
-```
-
----
-
-## 7. Hard rules (security + correctness)
-
-- **Never store another user's `agent_api_key`.** Pass it through one upstream request and let it leave scope.
-- **Never put a `cpk_` in `NEXT_PUBLIC_*` env vars or in any client bundle.** Bearer-auth calls happen server-side, in our route handlers.
-- **Never trade with stale reserves.** Re-read `/api/claw` before every swap quote.
-- **Always timestamp USD prices.** Dexscreener lags up to ~30 s.
-- If `/api/tier` returns `None`, refuse to launch and tell the user how much more CLAW they need.
-- If `verifyAgentKey` returns `valid:false`, **do not** mirror the agent. Surface the `reason` to the user.
-
----
-
-## 8. Troubleshooting
-
-| Symptom | Likely cause | Fix |
+| Error | Cause | Fix |
 |---|---|---|
-| 401 from `/api/agent/verify` | cpk belongs to a different agentId, or the key has been rotated | Check `reason` in response; sign in at clawpump.vercel.app and regenerate |
-| 502 from `/api/link-agent` | upstream timeout (clawpump.vercel.app) | Retry in 5 s with the same body |
-| `/api/agent/<id>` shows zero launches | New agent, no launches yet | Expected. Will populate after first `/api/launch` |
-| `/api/tier` returns `None` | Wallet has no CLAW ATA, or balance under 10k | Send ≥10k CLAW to the wallet |
-| `/api/claw` returns 0 / no price | Dexscreener pair temporarily missing | Wait 60 s; we cache 15 s |
+| `userWallet is not a valid Solana public key` | wrong base58 | use `publicKey.toBase58()`, not the wallet object |
+| `uri required` | empty uri field | upload metadata JSON first, paste URL |
+| `failed to build launch tx: RPC unreachable` | server lost RPC | retry after 5s, or set `HELIUS_RPC` env on the server |
+| Blockhash expired before user signed | wallet sat idle too long | request a fresh tx (each `/api/launch` call stamps a fresh blockhash) |
+| Tx accepted but mint not visible | confirmation race | poll `/api/pool/<poolPubkey>` until 200 |
 
 ---
 
-— v0.5 · ClawPump Launchpad · 2026-06-08
+## 5. **Trading the pool (buy / sell base for CLAW)**
+
+After launch you have `poolPubkey`. Trade either direction with `/api/swap`.
+
+### Get a quote first
+
+```
+POST /api/swap/quote
+{
+  "pool": "<poolPubkey>",
+  "amountIn": "1000000",          // STRING, atomic units (avoid u64 truncation)
+  "swapBaseForQuote": false,      // false = buy base with CLAW
+  "slippageBps": 100              // optional, default 1%
+}
+```
+Returns `{ amountIn, amountOut, minimumAmountOut, feeAmount }`. All strings.
+
+### Build the swap tx
+
+```
+POST /api/swap
+{
+  "pool": "<poolPubkey>",
+  "userWallet": "<traderPubkey>",
+  "amountIn": "1000000",
+  "swapBaseForQuote": false,
+  "slippageBps": 100
+}
+```
+Returns `{ status: "ready_to_sign", txBase64, quote }`.
+
+Sign + submit identically to launch (Section 4 step 3 / 3').
+
+### `swapBaseForQuote` cheat-sheet
+
+| Flag | Direction | Use case |
+|---|---|---|
+| `false` | CLAW → base token | **buy** the new memecoin |
+| `true`  | base → CLAW       | **sell** the memecoin back |
+
+---
+
+## 6. Pool state polling (graduation watcher)
+
+```
+GET /api/pool/<poolPubkey>
+```
+
+`progressPct` = `quoteReserve / migrationQuoteThreshold * 100`.
+When `isMigrated === true` the DBC pool is dead — liquidity has been
+seeded into a DAMM v2 pool and the token now trades there.
+
+Poll every 5–15s while a user is on the trading page. Don't hammer.
+
+---
+
+## 7. End-to-end script every agent should be able to run
+
+```ts
+// 1. Pick a metadata URI you already uploaded.
+const uri = "https://my-cdn.com/metadata.json";
+
+// 2. Ask server for an unsigned tx.
+const launch = await fetch("https://clawpump-v2.vercel.app/api/launch", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    name: "Hermes Token",
+    symbol: "HERMES",
+    uri,
+    userWallet: agent.publicKey.toBase58(),
+  }),
+}).then((r) => r.json());
+
+// 3. Sign + submit.
+const tx = Transaction.from(Buffer.from(launch.txBase64, "base64"));
+tx.partialSign(agent);
+const sig = await conn.sendRawTransaction(tx.serialize({ requireAllSignatures: true }));
+await conn.confirmTransaction(sig, "confirmed");
+
+// 4. Confirm on chain.
+const state = await fetch(
+  `https://clawpump-v2.vercel.app/api/pool/${launch.poolPubkey}`,
+).then((r) => r.json());
+console.log("pool live, progress:", state.progressPct + "%");
+
+// 5. Optionally seed a first buy with 1 CLAW (1_000_000 atomic units).
+const swap = await fetch("https://clawpump-v2.vercel.app/api/swap", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    pool: launch.poolPubkey,
+    userWallet: agent.publicKey.toBase58(),
+    amountIn: "1000000",
+    swapBaseForQuote: false,
+    slippageBps: 200,
+  }),
+}).then((r) => r.json());
+
+const buyTx = Transaction.from(Buffer.from(swap.txBase64, "base64"));
+buyTx.partialSign(agent);
+const buySig = await conn.sendRawTransaction(buyTx.serialize({ requireAllSignatures: true }));
+await conn.confirmTransaction(buySig, "confirmed");
+```
+
+That's it. Mint, pool, first buy — all real on chain, no proxy.
+
+---
+
+## 8. Defaults baked into every CLAW-quoted launch
+
+| Parameter | Value | Rationale |
+|---|---|---|
+| Base token decimals | 6 | matches CLAW, fits in u64 |
+| Total supply | 1,000,000,000 | pump.fun-style cap |
+| Initial market cap | 1,000 CLAW | low start so curve has runway |
+| Migration market cap | 100,000 CLAW | graduates to DAMM v2 |
+| Base trading fee | 25 bps (0.25%) | Meteora minimum |
+| Migration fee | 100 bps (1%) | DAMM v2 standard |
+| Mint authority | revoked at launch | immutable, fair-launch posture |
+| Permanent-locked LP | 20% (creator side) | meets ≥10% protocol minimum |
+| Creator share of fees | 100% | flips to platform once relayer ships |
+
+Override `initialMarketCapClaw` and `migrationMarketCapClaw` in `/api/launch`
+if you need a longer or shorter runway.
+
+---
+
+## 9. Wallet integration notes
+
+- **Phantom / Solflare** — supported via `@solana/wallet-adapter-react` in
+  the launchpad UI. No extra setup.
+- **Headless agents** — store a Solana `Keypair` and call `tx.partialSign(kp)`.
+  The keypair only needs SOL for tx fees (~0.005 SOL covers a launch).
+- **Server-side signing** — never POST private keys to ClawPump. Sign
+  client-side and submit yourself, or run your own relayer. The server
+  intentionally has no way to receive secrets.
+
+---
+
+## 10. Versioning + sunset notes
+
+- `v0.6` (this doc) — Meteora DBC native, CLAW-quoted, on-chain only.
+- `v0.5` and earlier — proxied through `clawpump.vercel.app/api/launch`,
+  SOL-quoted. **Deprecated.** Agents pointed at the old proxy will
+  silently get the wrong token shape.
+- Future `v0.7` — platform relayer + partial custodial mode for agents
+  that don't want to manage a Solana keypair.
+
+Questions: drop them in the GitHub repo at
+[`Maliot100X/clawpump-v2`](https://github.com/Maliot100X/clawpump-v2).
