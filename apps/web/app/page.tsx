@@ -117,6 +117,19 @@ export default function ClawPumpLaunchpad() {
   const [agentLookup, setAgentLookup] = useState('');
   const [agentProfile, setAgentProfile] = useState<AgentProfile | null>(null);
 
+  // "Link existing agent" form — pastes agentId + optional cpk_ key.
+  // The cpk lives only in the form state, sent once to /api/agent/verify,
+  // and is wiped on submit. Never logged, never persisted, never re-displayed.
+  const [linkAgentId, setLinkAgentId] = useState('');
+  const [linkCpk, setLinkCpk] = useState('');
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkResult, setLinkResult] = useState<{
+    ok: boolean;
+    msg: string;
+    displayName?: string;
+    wallet?: string;
+  } | null>(null);
+
   // Live CLAW price ticker — refresh every 30s
   useEffect(() => {
     let cancelled = false;
@@ -189,6 +202,58 @@ export default function ClawPumpLaunchpad() {
       setAgentProfile({ agentId: id, earnings: {}, launches: [] });
     }
   }, [agentLookup]);
+
+  const linkExistingAgent = useCallback(async () => {
+    const id = linkAgentId.trim();
+    const cpk = linkCpk.trim();
+    if (!id) {
+      setLinkResult({ ok: false, msg: 'agentId required' });
+      return;
+    }
+    setLinkBusy(true);
+    setLinkResult(null);
+    try {
+      // If a cpk was provided, hit the verifying endpoint; otherwise fall back
+      // to the lightweight link (public data only, no ownership proof).
+      const endpoint = cpk ? '/api/agent/verify' : '/api/link-agent';
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentId: id,
+          ...(cpk ? { agentApiKey: cpk } : {}),
+          ...(wallet.publicKey ? { wallet: wallet.publicKey.toBase58() } : {}),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      // Wipe the key from memory as soon as the request returns.
+      setLinkCpk('');
+      if (!res.ok || data.error || data.valid === false) {
+        setLinkResult({
+          ok: false,
+          msg: data.error || data.reason || `failed (${res.status})`,
+        });
+      } else {
+        setLinkResult({
+          ok: true,
+          msg: cpk ? 'verified + linked' : 'linked (unverified)',
+          displayName: data.displayName ?? undefined,
+          wallet: data.wallet ?? undefined,
+        });
+        // Refresh the leaderboard so the freshly-linked agent shows up.
+        jget<{ leaderboard: CpLbRow[] }>('/api/leaderboard?limit=25')
+          .then((d) => setLeaderboard(d.leaderboard ?? []))
+          .catch(() => {});
+      }
+    } catch (e) {
+      setLinkResult({
+        ok: false,
+        msg: e instanceof Error ? e.message : String(e),
+      });
+    } finally {
+      setLinkBusy(false);
+    }
+  }, [linkAgentId, linkCpk, wallet.publicKey]);
 
   const aboutToGraduate = useMemo(
     () =>
@@ -371,6 +436,65 @@ export default function ClawPumpLaunchpad() {
               Give <a href="/skill.md" className="text-[#22D3EE] underline">/skill.md</a> to your agent
               to register or launch programmatically.
             </div>
+          </div>
+
+          <div className="card p-6 lg:col-span-3">
+            <div className="display text-xl mb-2">Link existing agent</div>
+            <div className="text-xs text-[#94A3B8] mb-3">
+              Already have a ClawPump agent on clawpump.tech?
+              Paste your <span className="font-mono">agent_id</span> below.
+              Add your <span className="font-mono">cpk_</span> key only if you want
+              ownership-verified linking — the key is forwarded once to
+              clawpump.tech, then wiped from this page. Never stored.
+            </div>
+            <div className="grid md:grid-cols-2 gap-3">
+              <input
+                className="input w-full"
+                placeholder="agent_id (agent_…)"
+                value={linkAgentId}
+                onChange={(e) => setLinkAgentId(e.target.value)}
+              />
+              <input
+                className="input w-full"
+                type="password"
+                placeholder="cpk_… (optional, for verified link)"
+                value={linkCpk}
+                onChange={(e) => setLinkCpk(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <button
+              onClick={linkExistingAgent}
+              disabled={linkBusy}
+              className="btn btn-gold mt-3"
+            >
+              {linkBusy
+                ? 'linking…'
+                : linkCpk
+                ? 'Verify + link'
+                : 'Link (unverified)'}
+            </button>
+            {linkResult && (
+              <div
+                className={`mt-3 text-sm p-3 border rounded ${
+                  linkResult.ok
+                    ? 'border-[#22D3EE]/40 bg-[#0A0F1A] text-[#22D3EE]'
+                    : 'border-[#F87171]/40 bg-[#0A0F1A] text-[#F87171]'
+                }`}
+              >
+                {linkResult.msg}
+                {linkResult.displayName && (
+                  <div className="text-[#94A3B8] mt-1">
+                    name: <span className="font-mono">{linkResult.displayName}</span>
+                  </div>
+                )}
+                {linkResult.wallet && (
+                  <div className="text-[#94A3B8]">
+                    wallet: <span className="font-mono">{linkResult.wallet.slice(0, 8)}…{linkResult.wallet.slice(-4)}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
