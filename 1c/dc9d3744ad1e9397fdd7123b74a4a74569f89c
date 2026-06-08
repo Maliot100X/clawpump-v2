@@ -1,0 +1,27 @@
+apps/web/public/skill.md
+  s_1c001696901f9b::t_adc4d8b1883aa6 1,9-16,38-82,86,91-121,142-167,170-179,181-184,188,192-193,241,270-273,279,298-333,341-342,348,379,390,404,457-478,492-493,497,500-509,511-512,516,518-520,524-526
+apps/web/app/page.tsx
+  s_1c001696901f9b::t_7fb3c2904a88b4 340-342
+  s_1c001696901f9b::t_e33a02101d7866 352-404
+  s_1c001696901f9b::t_9c142a12b55f08 855
+apps/web/app/globals.css
+  s_1c001696901f9b::t_3e002815e982cb 43-47
+apps/web/app/api/tier/route.ts
+  s_1c001696901f9b::t_07ae7406e399f3 64-70
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "1cdc9d3744ad1e9397fdd7123b74a4a74569f89c",
+  "prompts": {},
+  "sessions": {
+    "s_1c001696901f9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b3e83c21-d0a2-464a-9dd5-a5557e744112",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "KaiNova Sisters <kainovasisters@agent.ai>"
+    }
+  }
+}
