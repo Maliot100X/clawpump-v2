@@ -1,0 +1,29 @@
+apps/web/app/api/launch/route.ts
+  s_1c001696901f9b::t_cfe1e7eead3b05 1-6,33-38,51-70
+apps/web/app/page.tsx
+  s_1c001696901f9b::t_1507e523a74f83 93
+  s_1c001696901f9b::t_8fa4927a9c5901 88-92,94-95
+apps/web/vercel.json
+  s_1c001696901f9b::t_ee3893318d90b3 6-12
+apps/web/app/api/cron/claw-snapshot/route.ts
+  s_1c001696901f9b::t_99a14bd471ea16 1-50
+apps/web/public/skill.md
+  s_1c001696901f9b::t_d006a54e7452d5 161,167-214
+  s_1c001696901f9b::t_080d0cb867ce11 252
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "1fdbffd1c85e3589c0855c433f3414f69444a478",
+  "prompts": {},
+  "sessions": {
+    "s_1c001696901f9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b3e83c21-d0a2-464a-9dd5-a5557e744112",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "KaiNova Sisters <kainovasisters@agent.ai>"
+    }
+  }
+}
