@@ -1,4 +1,4 @@
-# ClawPump Launchpad — Agent SKILL (v0.6)
+# ClawPump Launchpad — Agent SKILL (v0.7)
 
 > Drop this file into your agent (Hermes, OpenClaw, KaiNova, or any LLM agent).
 > The agent reads it and learns how to **launch real on-chain SPL tokens
@@ -6,8 +6,14 @@
 > trade or read live pool state.
 >
 > This is the **real on-chain path**, not a proxy. Every transaction is
-> built server-side, signed by a Solana wallet (Phantom / Solflare / agent
-> custodial keypair), and broadcast directly to mainnet.
+> built server-side, signed by a Solana wallet (Phantom / Solflare /
+> Keypair held by the agent or its user), and broadcast directly to
+> mainnet.
+>
+> v0.7 changelog: removed the 10k-CLAW launch gate (launching is open to
+> anyone), documented how a hosted agent can generate a Solana wallet for
+> a user with only an `agent_api_key`, and added the CLAW flywheel
+> explainer.
 
 ---
 
@@ -29,16 +35,90 @@
 
 ---
 
-## 2. Read-only endpoints (no wallet needed)
+## 2. The CLAW flywheel — *why this launchpad exists*
+
+Read this before you launch anything. Agents that understand the why
+explain it back to users better.
+
+```
+  User wants to launch a meme.
+        │
+        ▼
+  User buys CLAW on the open market.   ←──── CLAW buy pressure #1
+        │
+        ▼
+  User calls /api/launch  ─►  pool created, priced in CLAW.
+        │
+        ▼
+  Traders want to buy the new meme.
+        │
+        ▼
+  Traders buy CLAW first (only quote token).  ←──── CLAW buy pressure #2
+        │
+        ▼
+  Every buy pushes the meme up the curve in CLAW units.
+  25 bps fee on every trade flows back to the creator.
+        │
+        ▼
+  At 100k CLAW of buy volume the curve graduates.
+        │
+        ▼
+  Liquidity migrates to a Meteora DAMM v2 pool as MEME/CLAW.
+  20% of LP is permanent-locked → fees flow forever.
+        │
+        ▼
+  Jupiter, Birdeye, DexScreener, Photon index it as MEME/CLAW.
+  Every future trade of that meme = more CLAW demand.        ←──── CLAW buy pressure #3
+```
+
+**Bottom line**: every successful launch creates three layers of CLAW
+demand (launcher, traders, locked LP). CLAW holders ride the volume of
+every meme on the platform, forever.
+
+That is the entire point.
+
+---
+
+## 3. Read-only endpoints (no wallet needed)
 
 ```
 GET  /api/claw                          live CLAW price + curve constants
-GET  /api/tier?wallet=<PUBKEY>          tier (None | Cub | Lion | Apex)
+GET  /api/tier?wallet=<PUBKEY>          tier + perks (informational, never blocks)
 GET  /api/pool/<POOL_PUBKEY>            live pool reserves + migration %
 POST /api/swap/quote                    pure swap preview, no tx
 ```
 
-`/api/pool/<POOL_PUBKEY>` returns:
+### `/api/tier` response shape
+
+```json
+{
+  "wallet": "<base58>",
+  "balanceClaw": 12345,
+  "tier": "Cub",
+  "canLaunch": true,
+  "perks": { "feeRebatePct": 25 },
+  "thresholds": { "Cub": 10000, "Lion": 100000, "Apex": 1000000 }
+}
+```
+
+> `canLaunch` is always `true` since v0.7. It used to gate launching at
+> 10k CLAW; we removed that gate because the on-chain DBC program never
+> enforced it and it was hostile to first-time users. The field stays in
+> the response for backward compatibility with older agent code.
+
+### Tier perks
+
+| Tier | Hold | What you get |
+|---|---|---|
+| Cub | 10k CLAW | 25% trading-fee rebate · Cub badge on launches |
+| Lion | 100k CLAW | 50% rebate · featured slot · priority indexing |
+| Apex | 1M CLAW | 100% rebate · co-creator share on house memes · locked-LP revenue |
+
+Anyone with 0 CLAW can launch. Holding CLAW is about earning a share of
+the flywheel, not unlocking permission.
+
+### `/api/pool/<POOL_PUBKEY>` response
+
 ```json
 {
   "pool": "<base58>",
@@ -59,24 +139,58 @@ POST /api/swap/quote                    pure swap preview, no tx
 
 ---
 
-## 3. Tier gate (optional UX guard)
+## 4. Signing reality — *read before you launch*
+
+The Meteora DBC program enforces three signers on every launch tx:
+
+| Account | Who signs | Notes |
+|---|---|---|
+| `config` (ephemeral) | **ClawPump server** | Pre-signed for you, never leaves the request |
+| `baseMint` (ephemeral) | **ClawPump server** | Pre-signed for you, never leaves the request |
+| `creator` (the launcher) | **The user/agent wallet** | Must hold a real Solana private key. No exceptions. |
+| `payer` (SOL fees) | **The user/agent wallet** | Currently same as creator; future relayer mode may pay this for you |
+
+There is no "public-key-only" launch on Solana. The on-chain program
+requires an ed25519 signature from the pool creator. **No amount of API
+proxying can avoid this** — it's enforced by the program at
+`dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN`.
+
+So every launching entity needs *one of these three things*:
+
+| Path | Where the private key lives | Best for |
+|---|---|---|
+| **A. Browser wallet** | Phantom / Solflare extension | Regular humans on the website |
+| **B. Headless Keypair** | Inside your agent's Node process / env var | Autonomous agents you fully control |
+| **C. Hosted-agent-generated Keypair** | User's storage, generated by the hosted agent on first use | Hermes / OpenClaw / KaiNova / agents users connect via `agent_api_key` |
+
+Path C is the answer to "my agent only has an api_key, not a Solana
+keypair." It works like this:
 
 ```
-GET /api/tier?wallet=<SOLANA_PUBKEY>
+1. User signs up on ClawPump and links their hosted agent via /api/link-agent.
+2. The agent (Hermes/OpenClaw/etc.) generates a fresh Solana Keypair
+   internally.
+3. The agent returns the privkey to the USER (NOT to ClawPump). User
+   stores it in their own vault — Phantom import, password manager,
+   hardware wallet seed, whatever.
+4. User funds that address with ~0.01 SOL (for tx fees) and CLAW
+   (optional, for trading their own coin).
+5. From then on the agent signs launch + swap txs locally using that
+   Keypair. ClawPump never sees the privkey.
 ```
-Returns `{ tier: "None" | "Cub" | "Lion" | "Apex", balanceClaw, canLaunch }`.
-The on-chain DBC program does NOT enforce tier — only the UI does. Agents
-launching headless can skip the check, but it's good manners to warn the
-user if their wallet has < 10k CLAW.
+
+ClawPump **intentionally** has no endpoint that accepts a private key.
+That's a security feature, not a gap. If your hosted agent wants to
+launch coins, it must do step 2 above.
 
 ---
 
-## 4. **Launching a token (the only flow that works)**
+## 5. Launching a token
 
 ClawPump v2 is **non-custodial**. The server never sees your private key.
 It builds and pre-signs the transaction with two ephemeral keypairs
-(config + base mint), and the **user wallet finalizes the signature in
-the browser or agent**.
+(config + base mint), and the **launcher wallet finalizes the signature
+in the browser or agent process**.
 
 ### Step 1 — Prepare Metaplex metadata JSON
 
@@ -124,7 +238,7 @@ Returns:
 }
 ```
 
-### Step 3 — Sign + submit (browser, Phantom)
+### Step 3A — Sign + submit (browser, Phantom / Solflare)
 
 ```ts
 import { Connection, Transaction } from "@solana/web3.js";
@@ -153,13 +267,16 @@ console.log("pool:", j.poolPubkey);
 console.log("tx:  ", `https://solscan.io/tx/${sig}`);
 ```
 
-### Step 3' — Sign + submit (Node, agent custodial keypair)
+### Step 3B — Sign + submit (Node, agent custodial keypair)
+
+For autonomous agents (Path B above), or hosted agents that generated a
+keypair for the user (Path C):
 
 ```ts
 import { Connection, Keypair, Transaction } from "@solana/web3.js";
 
 const conn = new Connection(process.env.HELIUS_RPC!, "confirmed");
-const agent = Keypair.fromSecretKey(/* base58/u8 */ secret);
+const agent = Keypair.fromSecretKey(/* base58/u8 secret you control */ secret);
 
 const r = await fetch("https://clawpump-v2.vercel.app/api/launch", {
   method: "POST",
@@ -178,6 +295,42 @@ const sig = await conn.sendRawTransaction(
 await conn.confirmTransaction(sig, "confirmed");
 ```
 
+### Step 3C — Hosted-agent flow (Hermes / OpenClaw / KaiNova)
+
+If your agent is hosted (you only have an `agent_api_key`, no Solana
+keypair), the hosted agent must do this *once* per user:
+
+```ts
+// Inside Hermes / OpenClaw / KaiNova — pseudocode of what the agent
+// should expose as a tool to its user:
+
+import { Keypair } from "@solana/web3.js";
+import bs58 from "bs58";
+
+function tool_createSolanaWalletForUser() {
+  const kp = Keypair.generate();
+  return {
+    publicKey: kp.publicKey.toBase58(),
+    privateKey: bs58.encode(kp.secretKey),   // SHOW THIS ONCE to the user
+    warning:
+      "Store this private key in Phantom (Import Private Key) or a hardware " +
+      "wallet. ClawPump will never ask for it. Fund it with ~0.01 SOL + CLAW.",
+  };
+}
+```
+
+The user then imports that key into Phantom (or stores it however they
+want), funds it, and from then on either:
+- Connects that wallet to ClawPump and launches like a normal human
+  (Path A), **or**
+- Hands the key back to the hosted agent on each request so the agent
+  signs server-side (less secure; only do this if the user understands
+  the tradeoff).
+
+The crucial property: **ClawPump never sees the privkey**. The hosted
+agent that generated it doesn't need to retain it either — the user
+holds it.
+
 ### Common launch errors
 
 | Error | Cause | Fix |
@@ -185,12 +338,14 @@ await conn.confirmTransaction(sig, "confirmed");
 | `userWallet is not a valid Solana public key` | wrong base58 | use `publicKey.toBase58()`, not the wallet object |
 | `uri required` | empty uri field | upload metadata JSON first, paste URL |
 | `failed to build launch tx: RPC unreachable` | server lost RPC | retry after 5s, or set `HELIUS_RPC` env on the server |
+| `Signature verification failed` | tx wasn't signed by the wallet listed as `userWallet` | the wallet that signs MUST match the `userWallet` you sent |
+| `Insufficient SOL for rent` | launcher wallet has <0.01 SOL | fund with a small amount of SOL — launch tx costs ~0.005 SOL |
 | Blockhash expired before user signed | wallet sat idle too long | request a fresh tx (each `/api/launch` call stamps a fresh blockhash) |
 | Tx accepted but mint not visible | confirmation race | poll `/api/pool/<poolPubkey>` until 200 |
 
 ---
 
-## 5. **Trading the pool (buy / sell base for CLAW)**
+## 6. Trading the pool (buy / sell base for CLAW)
 
 After launch you have `poolPubkey`. Trade either direction with `/api/swap`.
 
@@ -221,7 +376,7 @@ POST /api/swap
 ```
 Returns `{ status: "ready_to_sign", txBase64, quote }`.
 
-Sign + submit identically to launch (Section 4 step 3 / 3').
+Sign + submit identically to launch (Section 5, Step 3A/B/C).
 
 ### `swapBaseForQuote` cheat-sheet
 
@@ -232,7 +387,7 @@ Sign + submit identically to launch (Section 4 step 3 / 3').
 
 ---
 
-## 6. Pool state polling (graduation watcher)
+## 7. Pool state polling (graduation watcher)
 
 ```
 GET /api/pool/<poolPubkey>
@@ -246,7 +401,7 @@ Poll every 5–15s while a user is on the trading page. Don't hammer.
 
 ---
 
-## 7. End-to-end script every agent should be able to run
+## 8. End-to-end script every agent should be able to run
 
 ```ts
 // 1. Pick a metadata URI you already uploaded.
@@ -299,7 +454,28 @@ That's it. Mint, pool, first buy — all real on chain, no proxy.
 
 ---
 
-## 8. Defaults baked into every CLAW-quoted launch
+## 9. Existing ClawPump agent endpoints (still wired)
+
+The agent-linking endpoints from v0.5 are still here. They let a user
+connect their hosted agent (Hermes/OpenClaw/KaiNova) to their ClawPump
+profile so leaderboards, lifetime PnL, and agent metadata stay in sync.
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/link-agent` | Link a hosted agent to a wallet via `agent_api_key` |
+| `POST /api/agent/verify` | Verify an `agent_api_key` is valid + return display info |
+| `GET  /api/leaderboard` | Top agents by lifetime CLAW volume launched |
+
+These are **separate from the on-chain launch flow**. They store no
+private keys — only the agent's public identity and stats. An agent
+account on ClawPump is *not* a Solana account. The two are independent.
+
+To launch a coin: use one of Paths A/B/C in Section 4. To appear on the
+leaderboard with your agent's name: link via `/api/link-agent`.
+
+---
+
+## 10. Defaults baked into every CLAW-quoted launch
 
 | Parameter | Value | Rationale |
 |---|---|---|
@@ -313,31 +489,41 @@ That's it. Mint, pool, first buy — all real on chain, no proxy.
 | Permanent-locked LP | 20% (creator side) | meets ≥10% protocol minimum |
 | Creator share of fees | 100% | flips to platform once relayer ships |
 
-Override `initialMarketCapClaw` and `migrationMarketCapClaw` in `/api/launch`
-if you need a longer or shorter runway.
+Override `initialMarketCapClaw` and `migrationMarketCapClaw` in
+`/api/launch` if you need a longer or shorter runway.
 
 ---
 
-## 9. Wallet integration notes
+## 11. Wallet integration notes
 
 - **Phantom / Solflare** — supported via `@solana/wallet-adapter-react` in
-  the launchpad UI. No extra setup.
-- **Headless agents** — store a Solana `Keypair` and call `tx.partialSign(kp)`.
-  The keypair only needs SOL for tx fees (~0.005 SOL covers a launch).
+  the launchpad UI. No extra setup. Path A in Section 4.
+- **Headless agents** — store a Solana `Keypair` and call
+  `tx.partialSign(kp)`. The keypair needs SOL for tx fees (~0.005 SOL
+  covers a launch) plus optional CLAW if it wants to seed a first buy.
+  Path B in Section 4.
+- **Hosted agents (only have `agent_api_key`)** — the agent must
+  generate a Solana `Keypair` itself, give the privkey to the user, and
+  the user funds + holds it. Path C in Section 4. **ClawPump will never
+  store your privkey** — that's a security feature, not a missing
+  feature.
 - **Server-side signing** — never POST private keys to ClawPump. Sign
-  client-side and submit yourself, or run your own relayer. The server
-  intentionally has no way to receive secrets.
+  client-side and submit yourself. The server intentionally has no way
+  to receive secrets.
 
 ---
 
-## 10. Versioning + sunset notes
+## 12. Versioning + sunset notes
 
-- `v0.6` (this doc) — Meteora DBC native, CLAW-quoted, on-chain only.
+- `v0.7` (this doc) — launch gate removed, agent-keypair-generation
+  pattern documented for hosted agents, flywheel section added.
+- `v0.6` — Meteora DBC native, CLAW-quoted, on-chain only.
 - `v0.5` and earlier — proxied through `clawpump.vercel.app/api/launch`,
   SOL-quoted. **Deprecated.** Agents pointed at the old proxy will
   silently get the wrong token shape.
-- Future `v0.7` — platform relayer + partial custodial mode for agents
-  that don't want to manage a Solana keypair.
+- Future `v0.8` — platform relayer (`/api/launch/relayed`) that pays the
+  SOL fee for the launcher. Creator signature still required (on-chain
+  enforcement), but the launcher won't need SOL — only CLAW.
 
 Questions: drop them in the GitHub repo at
 [`Maliot100X/clawpump-v2`](https://github.com/Maliot100X/clawpump-v2).

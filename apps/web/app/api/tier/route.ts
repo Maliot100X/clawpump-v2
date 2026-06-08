@@ -61,7 +61,13 @@ export async function GET(req: NextRequest) {
       clawMint: CLAW_MINT,
       balanceClaw: balance,
       tier,
-      canLaunch: tier !== "None",
+      // Launch is open to anyone. `canLaunch` stays true and exists only as a
+      // legacy field for older agents that still read it. Holding CLAW
+      // unlocks perks (see /skill.md flywheel) — it does not gate launching.
+      canLaunch: true,
+      perks: {
+        feeRebatePct: tier === "Apex" ? 100 : tier === "Lion" ? 50 : tier === "Cub" ? 25 : 0,
+      },
       thresholds: { Cub: 10_000, Lion: 100_000, Apex: 1_000_000 },
       source: "helius",
     });

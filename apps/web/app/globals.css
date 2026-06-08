@@ -40,6 +40,11 @@ h1, h2, .display {
   border-radius: 999px;
 }
 
+.badge-none { background: #1F2937; color: #94A3B8; border: 1px solid #374151; }
+.badge-cub  { background: rgba(34, 211, 238, 0.12); color: #22D3EE; border: 1px solid rgba(34, 211, 238, 0.35); }
+.badge-lion { background: rgba(197, 164, 110, 0.14); color: #C5A46E; border: 1px solid rgba(197, 164, 110, 0.40); }
+.badge-apex { background: linear-gradient(135deg, rgba(197,164,110,0.18), rgba(34,211,238,0.18)); color: #FDE68A; border: 1px solid #C5A46E; }
+
 .progress {
   height: 7px;
   background: var(--bg-elev);

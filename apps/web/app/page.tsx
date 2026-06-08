@@ -337,11 +337,9 @@ export default function ClawPumpLaunchpad() {
               <>
                 <span className={`badge badge-${tier.tier.toLowerCase()}`}>{tier.tier}</span>
                 <span className="font-mono text-xs">{fmt(tier.balanceClaw)} CLAW</span>
-                {!tier.canLaunch && (
-                  <span className="text-[#F87171] text-xs">
-                    Need ≥ 10,000 CLAW to launch
-                  </span>
-                )}
+                <span className="text-[#22D3EE] text-xs">
+                  Launch is open — holding CLAW unlocks perks ↓
+                </span>
               </>
             )}
             {tierErr && <span className="text-[#F87171] text-xs">tier err: {tierErr}</span>}
@@ -349,6 +347,59 @@ export default function ClawPumpLaunchpad() {
         ) : (
           <span className="text-[#94A3B8]">Connect a Solana wallet to check your tier.</span>
         )}
+      </div>
+
+      {/* Holder strategy — why hold CLAW */}
+      <div className="mb-6 p-5 rounded-xl border border-[#1F2A44] bg-gradient-to-br from-[#0F172A] via-[#0A0F1A] to-[#0F172A]">
+        <div className="flex items-baseline justify-between mb-2">
+          <div className="display text-xl">Why hold CLAW?</div>
+          <span className="text-xs text-[#94A3B8]">launch is open to anyone · holding earns the upside</span>
+        </div>
+        <div className="text-sm text-[#94A3B8] mb-4">
+          Every memecoin launched here is priced in CLAW (not SOL). Each new coin
+          creates CLAW buy demand on the way up and a permanent CLAW-paired LP
+          on graduation. Holders ride that flywheel.
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3 rounded-lg border border-[#1F2A44] bg-[#0A0F1A]">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="badge badge-cub">Cub</span>
+              <span className="text-xs text-[#94A3B8]">≥ 10k CLAW</span>
+            </div>
+            <ul className="text-xs text-[#CBD5E1] list-disc list-inside space-y-1">
+              <li>25% rebate on trading fees you pay</li>
+              <li>Cub badge on your launches</li>
+            </ul>
+          </div>
+          <div className="p-3 rounded-lg border border-[#1F2A44] bg-[#0A0F1A]">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="badge badge-lion">Lion</span>
+              <span className="text-xs text-[#94A3B8]">≥ 100k CLAW</span>
+            </div>
+            <ul className="text-xs text-[#CBD5E1] list-disc list-inside space-y-1">
+              <li>50% trading-fee rebate</li>
+              <li>Featured slot on the home page</li>
+              <li>Priority pool indexing</li>
+            </ul>
+          </div>
+          <div className="p-3 rounded-lg border border-[#1F2A44] bg-[#0A0F1A]">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="badge badge-apex">Apex</span>
+              <span className="text-xs text-[#94A3B8]">≥ 1M CLAW</span>
+            </div>
+            <ul className="text-xs text-[#CBD5E1] list-disc list-inside space-y-1">
+              <li>100% trading-fee rebate</li>
+              <li>Co-creator share on house-launched memes</li>
+              <li>Locked-LP revenue stream</li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-4 p-3 rounded-lg border border-[#1F2A44] bg-[#0A0F1A] text-xs text-[#94A3B8]">
+          <span className="text-[#C5A46E] font-semibold">Flywheel:</span> launcher
+          buys CLAW → launches coin priced in CLAW → traders buy CLAW to trade
+          coin → coin graduates with a permanent CLAW-paired LP on Meteora DAMM v2
+          → trading fees flow back to CLAW holders forever.
+        </div>
       </div>
 
       {/* Tabs */}
@@ -687,10 +738,6 @@ function LaunchPanel({
       alert('Connect Phantom or Solflare first (top-right button).');
       return;
     }
-    if (!tier?.canLaunch) {
-      alert('Need at least 10,000 CLAW (Cub tier) to launch.');
-      return;
-    }
     if (!form.name || !form.symbol) {
       alert('name and symbol are required.');
       return;
@@ -805,7 +852,7 @@ function LaunchPanel({
           disabled={submitting}
           className="btn btn-primary w-full mt-4 disabled:opacity-50"
         >
-          {submitting ? 'Launching…' : `Launch (CLAW-quoted DBC · ${tier?.tier ?? 'no wallet'})`}
+          {submitting ? 'Launching…' : `Launch CLAW-quoted DBC${tier?.tier && tier.tier !== 'None' ? ` · ${tier.tier} perks` : ''}`}
         </button>
         {status && (
           <div className="mt-3 text-xs text-[#22D3EE] font-mono">{status}</div>
