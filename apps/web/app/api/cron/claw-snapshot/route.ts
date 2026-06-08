@@ -1,7 +1,10 @@
 // GET /api/cron/claw-snapshot
-// Vercel cron — fires every 5 minutes (see vercel.json crons). Writes one
-// CLAW price snapshot into Neon claw_price_history so we have continuous data
-// even when no one has the dashboard open.
+// Vercel cron — fires once daily (see vercel.json crons). Writes one
+// CLAW price snapshot into Neon claw_price_history as a heartbeat backup.
+// Continuous data comes from /api/claw itself, which records on every call;
+// the frontend polls /api/claw every 30s while open. The cron exists only
+// to backfill rows during periods when nobody is visiting.
+// (Hobby plan caps cron at once/day; sub-daily would require Pro.)
 //
 // Vercel signs cron requests with the CRON_SECRET env var via the
 // `Authorization: Bearer <CRON_SECRET>` header. We accept either that or
