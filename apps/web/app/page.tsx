@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { Connection, Transaction } from '@solana/web3.js';
 
 // ─── Types mirroring our /api responses ────────────────────────────────────
 
@@ -648,8 +649,7 @@ function LaunchPanel({
     symbol: '',
     description: '',
     imageUrl: '',
-    agentId: '',
-    agentApiKey: '',
+    uri: '',
   });
   const [quote, setQuote] = useState<{
     tokensOut: number;
@@ -657,7 +657,10 @@ function LaunchPanel({
   } | null>(null);
   const [clawIn, setClawIn] = useState('1000');
   const [submitting, setSubmitting] = useState(false);
+  const [status, setStatus] = useState<string>('');
   const [result, setResult] = useState<unknown>(null);
+  const { connection } = useConnection();
+  const { publicKey, signTransaction } = useWallet();
 
   const preview = useCallback(async () => {
     const n = Number(clawIn);
@@ -680,25 +683,75 @@ function LaunchPanel({
   }, [preview]);
 
   const launch = async () => {
+    if (!publicKey || !signTransaction) {
+      alert('Connect Phantom or Solflare first (top-right button).');
+      return;
+    }
     if (!tier?.canLaunch) {
       alert('Need at least 10,000 CLAW (Cub tier) to launch.');
       return;
     }
-    if (!form.name || !form.symbol || !form.agentId) {
-      alert('name, symbol, agentId all required.');
+    if (!form.name || !form.symbol) {
+      alert('name and symbol are required.');
+      return;
+    }
+    const uri = form.uri.trim() || form.imageUrl.trim();
+    if (!uri) {
+      alert(
+        'Metadata URI required. Upload a Metaplex-format JSON (name, symbol, image, description) to IPFS or any CDN and paste the URL.',
+      );
       return;
     }
     setSubmitting(true);
+    setStatus('Building unsigned tx on server…');
     setResult(null);
     try {
       const r = await fetch('/api/launch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, ownerWallet: wallet }),
+        body: JSON.stringify({
+          name: form.name,
+          symbol: form.symbol,
+          uri,
+          userWallet: publicKey.toBase58(),
+        }),
       });
-      const j = await r.json();
-      setResult(j);
+      const j = (await r.json()) as {
+        status?: string;
+        txBase64?: string;
+        baseMintPubkey?: string;
+        poolPubkey?: string;
+        configPubkey?: string;
+        error?: string;
+        hint?: string;
+      };
+      if (!r.ok || !j.txBase64) {
+        setStatus('Launch build failed.');
+        setResult(j);
+        return;
+      }
+      setStatus('Requesting wallet signature…');
+      const tx = Transaction.from(Buffer.from(j.txBase64, 'base64'));
+      const signed = await signTransaction(tx);
+      setStatus('Submitting to Solana…');
+      const sig = await (connection as Connection).sendRawTransaction(
+        signed.serialize(),
+        { skipPreflight: false, maxRetries: 3 },
+      );
+      setStatus(`Submitted. Confirming sig ${sig.slice(0, 8)}…`);
+      await connection.confirmTransaction(sig, 'confirmed');
+      setStatus('Confirmed on chain.');
+      setResult({
+        status: 'launched',
+        signature: sig,
+        baseMint: j.baseMintPubkey,
+        pool: j.poolPubkey,
+        config: j.configPubkey,
+        solscan: `https://solscan.io/tx/${sig}`,
+        token: `https://solscan.io/token/${j.baseMintPubkey}`,
+      });
     } catch (e) {
+      setStatus('Failed.');
       setResult({ error: e instanceof Error ? e.message : String(e) });
     } finally {
       setSubmitting(false);
@@ -731,22 +784,15 @@ function LaunchPanel({
         </div>
         <input
           className="input mt-3"
-          placeholder="Image URL"
+          placeholder="Image URL (optional — for preview only)"
           value={form.imageUrl}
           onChange={(e) => setForm({ ...form, imageUrl: e.target.value })}
         />
         <input
           className="input mt-3"
-          placeholder="agent_id (existing clawpump.tech agent)"
-          value={form.agentId}
-          onChange={(e) => setForm({ ...form, agentId: e.target.value })}
-        />
-        <input
-          className="input mt-3"
-          type="password"
-          placeholder="agent_api_key (cpk_…) — pass-through, never stored"
-          value={form.agentApiKey}
-          onChange={(e) => setForm({ ...form, agentApiKey: e.target.value })}
+          placeholder="Metadata JSON URI (Metaplex format — ipfs:// or https://)"
+          value={form.uri}
+          onChange={(e) => setForm({ ...form, uri: e.target.value })}
         />
         <textarea
           className="input mt-3 h-20"
@@ -759,8 +805,11 @@ function LaunchPanel({
           disabled={submitting}
           className="btn btn-primary w-full mt-4 disabled:opacity-50"
         >
-          {submitting ? 'Launching…' : `Launch (10k CLAW fee · ${tier?.tier ?? 'no wallet'})`}
+          {submitting ? 'Launching…' : `Launch (CLAW-quoted DBC · ${tier?.tier ?? 'no wallet'})`}
         </button>
+        {status && (
+          <div className="mt-3 text-xs text-[#22D3EE] font-mono">{status}</div>
+        )}
         {result !== null && (
           <pre className="mt-3 text-xs bg-[#0A0F1A] border border-[#1F2A44] rounded p-3 overflow-auto max-h-64">
             {JSON.stringify(result, null, 2)}
