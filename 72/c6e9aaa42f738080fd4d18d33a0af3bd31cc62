@@ -1,0 +1,38 @@
+apps/web/app/api/agent/verify/route.ts
+  s_1c001696901f9b::t_038f33f02376c0 1-69
+apps/web/app/page.tsx
+  s_1c001696901f9b::t_8452a91f720340 120-132
+  s_1c001696901f9b::t_e1b8c9bddd00a5 440-498
+  s_1c001696901f9b::t_38dc29aa1bb497 206-257
+apps/web/lib/clawpump.ts
+  s_1c001696901f9b::t_beaaff2772a437 75-77,88-103,106-118
+  s_1c001696901f9b::t_4d1cb3df962e86 228-241,243-244,246-260
+  s_1c001696901f9b::t_a2741989aebf64 340-343,350,352-353,366-402,404-407,410-421
+  s_1c001696901f9b::t_a34de3161bfe56 74,78,122-127,164-172,174-177,181-183
+  s_1c001696901f9b::t_35cefbbbc317ea 344-349,351,354-365,403,408-409
+  s_1c001696901f9b::t_60e2e8dc297562 8
+  s_1c001696901f9b::t_ea218c4b927d92 128-163,173,178-180
+apps/web/app/api/link-agent/route.ts
+  s_1c001696901f9b::t_63317d69192818 1,4-7,10,19,24,30-40,42-53
+apps/web/public/skill.md
+  s_1c001696901f9b::t_f9e3931285b399 196-197
+  s_1c001696901f9b::t_b8845ba0009d15 122,124
+  s_1c001696901f9b::t_359d95b3538dac 15,20-22
+  s_1c001696901f9b::t_1d8c7890f676e8 1,3-5,7,9,11-14,16-18,24,26,28-33,35-45,49,51,56-82,84-121,123,125-135,137-148,150,152,155-162,165-167,170-175,179-195,198-200,202,204
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "72c6e9aaa42f738080fd4d18d33a0af3bd31cc62",
+  "prompts": {},
+  "sessions": {
+    "s_1c001696901f9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b3e83c21-d0a2-464a-9dd5-a5557e744112",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "KaiNova Sisters <kainovasisters@agent.ai>"
+    }
+  }
+}
