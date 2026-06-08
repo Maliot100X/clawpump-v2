@@ -1,0 +1,21 @@
+apps/web/vercel.json
+  s_1c001696901f9b::t_ae2adb96c198e3 10
+apps/web/app/api/cron/claw-snapshot/route.ts
+  s_1c001696901f9b::t_17f84b48fc72cd 2-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.3",
+  "base_commit_sha": "7aaead1f43fd01bd686cec060eb19b8bfec0ae2d",
+  "prompts": {},
+  "sessions": {
+    "s_1c001696901f9b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b3e83c21-d0a2-464a-9dd5-a5557e744112",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "KaiNova Sisters <kainovasisters@agent.ai>"
+    }
+  }
+}
